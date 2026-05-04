@@ -560,6 +560,7 @@ if ($doToast) {
     if (-not $toastOk) {
         Write-NotifyLog 'WinRT toast failed, trying balloon fallback'
         $balloonOk = Send-BalloonTip $Msg.Title $Msg.Body $Msg.Sound
+        if ($doSound) { Play-NotifySound $Msg.Sound }
         if (-not $balloonOk) {
             Write-NotifyLog 'Both toast and balloon failed, console only'
             try {
@@ -569,9 +570,7 @@ if ($doToast) {
             } catch { }
         }
     }
-}
-
-if ($doSound) {
+} elseif ($doSound) {
     Play-NotifySound $Msg.Sound
 }
 
