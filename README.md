@@ -1,5 +1,7 @@
 # Claude Code Windows Notify
 
+[English](README.md) | [中文](README.zh-CN.md)
+
 Native Windows toast notifications for [Claude Code](https://code.claude.com) CLI — with emoji titles, Chinese/English body text, and zero external dependencies.
 
 > Pure PowerShell 5.1 · WinRT Toast + Balloon Tip fallback · Safe hook merging · Dedup & quiet hours
@@ -148,6 +150,7 @@ This removes all notification hooks from `~/.claude/settings.json` and deletes t
 ```
 claude-code-notify/
   README.md               ← this file
+  README.zh-CN.md          ← Chinese version
   notify-handler.ps1       ← main handler (called by all hooks)
   install-notify.ps1       ← safe settings.json merger
   uninstall-notify.ps1     ← hook remover
@@ -173,45 +176,3 @@ Check `logs/notify.log` for detailed delivery status.
 ## License
 
 MIT
-
----
-
-# 中文说明
-
-## Claude Code Windows 通知系统
-
-为 [Claude Code](https://code.claude.com) CLI 提供原生 Windows toast 通知 — 支持 emoji 标题、中文正文、零外部依赖。
-
-### 快速安装
-
-```powershell
-git clone https://github.com/YOUR_USER/claude-code-notify.git
-cd claude-code-notify
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install-notify.ps1
-```
-
-### 通知类型
-
-| 触发事件 | 标题 | 含义 |
-|---|---|---|
-| Stop | ✅ 任务完成 | Claude 完成响应 |
-| StopFailure | ❌ 执行异常 | Claude 异常停止 |
-| Notification | ⏳ 等待输入 | Claude 等待你的回复 |
-| PermissionRequest | 🔐 请求权限 | 需要批准工具执行 |
-| PreToolUse: AskUserQuestion | 💬 Claude 提问 | Claude 有问题需要回答 |
-| PreToolUse: ExitPlanMode | 📋 计划就绪 | 计划已生成，等待确认 |
-| SubagentStop / TaskCompleted | 🤖 子任务完成 | 子 Agent 或团队任务完成 |
-
-### 工作原理
-
-所有 Claude Code hooks 调用同一个 PowerShell 脚本 `notify-handler.ps1`。脚本从 stdin 读取 JSON payload，分类事件，应用去重/严重度过滤/静音时段，构建通知消息，然后通过 WinRT Toast 或气泡提示弹出。
-
-### 配置
-
-编辑项目目录下的 `notify-config.json`，可控制每个事件的开关、严重度、免打扰时段等。详见上方英文配置章节。
-
-### 卸载
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\uninstall-notify.ps1
-```
