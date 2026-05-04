@@ -4,7 +4,7 @@
 
 Native Windows toast notifications for [Claude Code](https://code.claude.com) CLI — with emoji titles, Chinese/English body text, and zero external dependencies.
 
-> Pure PowerShell 5.1 · WinRT Toast + Balloon Tip fallback · Safe hook merging · Dedup & quiet hours
+> Pure PowerShell 5.1 · WinRT Toast + Balloon Tip fallback · Plugin-based · Dedup & quiet hours
 
 ---
 
@@ -15,7 +15,7 @@ Native Windows toast notifications for [Claude Code](https://code.claude.com) CL
 - **Balloon tip fallback** — system-tray popup if WinRT toast is unavailable
 - **System sounds** — different audio cues per severity (info / warning / error)
 - **Emoji + i18n** — emoji icons in titles, Chinese body text, fully PS 5.1 compatible
-- **Safe installer** — merges hooks into `settings.json` without overwriting existing entries; re-runnable
+- **Plugin-based** — install via `/plugin install`, auto-merged hooks, no manual settings.json editing
 - **Deduplication** — suppresses duplicate notifications within a configurable window (default 5 s)
 - **Quiet hours** — optional time window to mute low-severity notifications
 - **Zero dependencies** — no Node.js, Python, Go, Bun, or external PowerShell modules required
@@ -111,7 +111,7 @@ That's it. Every time Claude finishes a response, you'll get a native toast noti
 
 ## Configuration
 
-Edit `notify-config.json` in the project directory:
+Edit `~/.claude/claude-code-toast/notify-config.json`:
 
 ```jsonc
 {
@@ -128,6 +128,7 @@ Edit `notify-config.json` in the project directory:
   "showSummary": true,          // Show last assistant message preview (Stop event)
   "summaryMaxChars": 150,       // Truncate summary at N characters
   "debugLog": false,            // Log full payload JSON
+  "language": "zh-CN",          // "en" for English, "zh-CN" for Chinese
   "events": {
     "Stop":                 {"enabled": true, "severity": "low"},
     "StopFailure":          {"enabled": true, "severity": "high"},
@@ -135,7 +136,7 @@ Edit `notify-config.json` in the project directory:
     "PermissionRequest":    {"enabled": true, "severity": "high"},
     "PreToolUse:AskUserQuestion": {"enabled": true, "severity": "high"},
     "PreToolUse:ExitPlanMode":    {"enabled": true, "severity": "high"},
-    "SubagentStop":         {"enabled": true, "severity": "low"},
+    "SubagentStop":         {"enabled": false, "severity": "low"},
     "TaskCompleted":        {"enabled": true, "severity": "low"},
     "SessionStart":         {"enabled": false, "severity": "low"},
     "SessionEnd":           {"enabled": false, "severity": "low"}
@@ -184,7 +185,7 @@ claude-code-toast/
 |---|---|---|
 | No notification at all | Plugin not enabled | Run `/plugin list` to verify; check `enabledPlugins` in settings.json |
 | Sound but no toast | Focus Assist or AUMID not set up | Check Windows notification settings; re-run `setup.ps1` |
-| Toast shows wrong icon | Shortcut missing or wrong AUMID | Re-run `setup.ps1`; check `%APPDATA%\...\ClaudeCodeNotify\claude-notify.lnk` |
+| Toast shows wrong icon | Shortcut missing or wrong AUMID | Re-run `setup.ps1`; check `%APPDATA%\...\claude-code-toast\claude-code-toast.lnk` |
 | Chinese text is garbled | PS 5.1 encoding issue | Ensure `.ps1` is UTF-8 with BOM (plugin handles this) |
 | Duplicate notifications | Old hooks in settings.json conflicting | Remove old hook entries from `~/.claude/settings.json` |
 | Permission not triggering | Permission denied before hook fires | Normal — hook fires *before* the permission dialog |

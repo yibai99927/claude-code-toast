@@ -4,7 +4,7 @@
 
 为 [Claude Code](https://code.claude.com) CLI 提供原生 Windows toast 通知 — 支持 emoji 标题、中文正文、零外部依赖。
 
-> 纯 PowerShell 5.1 · WinRT Toast + 气泡提示回退 · 安全合并 hooks · 去重 & 免打扰
+> 纯 PowerShell 5.1 · WinRT Toast + 气泡提示回退 · 插件式安装 · 去重 & 免打扰
 
 ---
 
@@ -15,7 +15,7 @@
 - **气泡提示回退** — WinRT toast 不可用时自动使用系统托盘气泡
 - **系统声音** — 按严重程度区分提示音（信息 / 警告 / 错误）
 - **Emoji + 中文** — 标题带 emoji 图标，中文正文，完全兼容 PS 5.1
-- **安全安装器** — 合并 hooks 到 `settings.json` 时不覆盖已有配置，可重复运行
+- **插件式安装** — 通过 `/plugin install` 一键安装，hooks 自动合并，无需手动编辑 settings.json
 - **去重机制** — 可配置时间窗口内抑制重复通知（默认 5 秒）
 - **免打扰时段** — 可选静音时段，低严重度事件在此期间静音
 - **零依赖** — 无需 Node.js、Python、Go、Bun 或外部 PowerShell 模块
@@ -110,7 +110,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$pluginRoot\setup.ps1"
 
 ## 配置
 
-编辑项目目录下的 `notify-config.json`：
+编辑 `~/.claude/claude-code-toast/notify-config.json`：
 
 ```jsonc
 {
@@ -127,6 +127,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$pluginRoot\setup.ps1"
   "showSummary": true,          // 显示最后回复摘要（Stop 事件）
   "summaryMaxChars": 150,       // 摘要截断长度
   "debugLog": false,            // 记录完整 payload JSON
+  "language": "zh-CN",          // "en" 为英文，"zh-CN" 为中文
   "events": {
     "Stop":                 {"enabled": true, "severity": "low"},
     "StopFailure":          {"enabled": true, "severity": "high"},
@@ -134,7 +135,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$pluginRoot\setup.ps1"
     "PermissionRequest":    {"enabled": true, "severity": "high"},
     "PreToolUse:AskUserQuestion": {"enabled": true, "severity": "high"},
     "PreToolUse:ExitPlanMode":    {"enabled": true, "severity": "high"},
-    "SubagentStop":         {"enabled": true, "severity": "low"},
+    "SubagentStop":         {"enabled": false, "severity": "low"},
     "TaskCompleted":        {"enabled": true, "severity": "low"},
     "SessionStart":         {"enabled": false, "severity": "low"},
     "SessionEnd":           {"enabled": false, "severity": "low"}
@@ -183,7 +184,7 @@ claude-code-toast/
 |---|---|---|
 | 完全没通知 | 插件未启用 | 运行 `/plugin list` 确认；检查 settings.json 中 `enabledPlugins` |
 | 有声音但无弹窗 | 专注助手或 AUMID 未设置 | 检查 Windows 通知设置；重新运行 `setup.ps1` |
-| Toast 图标不对 | 快捷方式缺失或 AUMID 错误 | 重新运行 `setup.ps1`；检查 `%APPDATA%\...\ClaudeCodeNotify\claude-notify.lnk` |
+| Toast 图标不对 | 快捷方式缺失或 AUMID 错误 | 重新运行 `setup.ps1`；检查 `%APPDATA%\...\claude-code-toast\claude-code-toast.lnk` |
 | 中文乱码 | PS 5.1 编码问题 | 确保 `.ps1` 为 UTF-8 with BOM（插件已处理） |
 | 重复通知 | settings.json 中旧 hooks 冲突 | 从 `~/.claude/settings.json` 中移除旧的 hook 条目 |
 | 权限通知未触发 | Hook 在权限弹窗前触发 | 正常行为 — hook 在权限弹窗*之前*触发 |
