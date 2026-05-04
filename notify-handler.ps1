@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Claude Code Windows notification handler.
@@ -6,7 +6,7 @@
 .DESCRIPTION
   Called by Claude Code hooks. All events route through this single script.
   Toast (WinRT) -> NotifyIcon balloon -> system sound fallback chain.
-  Dedup, quiet hours, per-event enable/disable all read from ~/.claude/notify-config.json.
+  Dedup, quiet hours, per-event enable/disable all read from notify-config.json.
 #>
 param(
     [string]$ConfigPath = "$env:USERPROFILE\claude-code-notify\notify-config.json",
@@ -159,43 +159,115 @@ function Get-SummaryPreview {
     if ([string]::IsNullOrWhiteSpace($Text)) { return '' }
     $Text = $Text.Trim()
     if ($Text.Length -le $MaxChars) { return $Text }
-    return $Text.Substring(0, $MaxChars) + [char]0x2026  # ellipsis
+    return $Text.Substring(0, $MaxChars) + [char]0x2026
+}
+
+# -------- notification content (Chinese + emoji) --------
+
+# Messages are defined as script-level variables using Unicode escapes
+# to avoid .ps1 file encoding issues in PowerShell 5.1.
+# Each entry: Title, BodyTemplate, Sound, ToastAudio
+
+$script:NotifyTemplates = @{
+    'task_done' = @{
+        TitleEmoji   = [char]0x2705       # check mark
+        TitleSuffix  = [char]0x4EFB + [char]0x52A1 + [char]0x5B8C + [char]0x6210  # 任务完成
+        Sound        = 'Asterisk'
+        ToastAudio   = 'Default'
+    }
+    'failed' = @{
+        TitleEmoji   = [char]0x274C       # cross mark
+        TitleSuffix  = [char]0x6267 + [char]0x884C + [char]0x5F02 + [char]0x5E38  # 执行异常
+        Sound        = 'Hand'
+        ToastAudio   = 'Alarm'
+    }
+    'needs_input' = @{
+        TitleEmoji   = [char]0x23F3       # hourglass
+        TitleSuffix  = [char]0x7B49 + [char]0x5F85 + [char]0x8F93 + [char]0x5165  # 等待输入
+        Sound        = 'Asterisk'
+        ToastAudio   = 'IM'
+    }
+    'permission_required' = @{
+        TitleEmoji   = [char]::ConvertFromUtf32(0x1F510)  # lock with key
+        TitleSuffix  = [char]0x8BF7 + [char]0x6C42 + [char]0x6743 + [char]0x9650  # 请求权限
+        Sound        = 'Exclamation'
+        ToastAudio   = 'Reminder'
+    }
+    'question' = @{
+        TitleEmoji   = [char]::ConvertFromUtf32(0x1F4AC)  # speech bubble
+        TitleSuffix  = [char]0x63D0 + [char]0x95EE         # 提问
+        Sound        = 'Question'
+        ToastAudio   = 'Reminder'
+    }
+    'plan_ready' = @{
+        TitleEmoji   = [char]::ConvertFromUtf32(0x1F4CB)  # clipboard
+        TitleSuffix  = [char]0x8BA1 + [char]0x5212 + [char]0x5C31 + [char]0x7EEA  # 计划就绪
+        Sound        = 'Exclamation'
+        ToastAudio   = 'Reminder'
+    }
+    'subtask_done' = @{
+        TitleEmoji   = [char]::ConvertFromUtf32(0x1F916)  # robot
+        TitleSuffix  = [char]0x5B50 + [char]0x4EFB + [char]0x52A1 + [char]0x5B8C + [char]0x6210  # 子任务完成
+        Sound        = 'Asterisk'
+        ToastAudio   = 'Default'
+    }
+    'session' = @{
+        Sound        = 'Asterisk'
+        ToastAudio   = 'Default'
+    }
+}
+
+# Chinese body strings (built from Unicode escapes)
+$script:ChsBody = @{
+    responseFinished  = [char]0x54CD + [char]0x5E94 + [char]0x7ED3 + [char]0x675F  # 响应结束
+    stoppedUnexpected = 'Claude ' + [char]0x5F02 + [char]0x5E38 + [char]0x505C + [char]0x6B62 + [char]0x6216 + [char]0x9047 + [char]0x5230 + [char]0x9519 + [char]0x8BEF  # 异常停止或遇到错误
+    waitingReply      = [char]0x7B49 + [char]0x5F85 + [char]0x4F60 + [char]0x7684 + [char]0x56DE + [char]0x590D  # 等待你的回复
+    permissionNeeded   = [char]0x9700 + [char]0x8981 + [char]0x6743 + [char]0x9650 + [char]0x6267 + [char]0x884C + ' '  # 需要权限执行
+    hasQuestion        = [char]0x6709 + [char]0x95EE + [char]0x9898 + [char]0x9700 + [char]0x8981 + [char]0x4F60 + [char]0x56DE + [char]0x7B54  # 有问题需要你回答
+    planReadyBody      = [char]0x8BA1 + [char]0x5212 + [char]0x5DF2 + [char]0x751F + [char]0x6210 + [char]0xFF0C + [char]0x7B49 + [char]0x5F85 + [char]0x786E + [char]0x8BA4  # 计划已生成，等待确认
+    subtaskFinished    = [char]0x5B50 + [char]0x4EFB + [char]0x52A1 + [char]0x7ED3 + [char]0x675F  # 子任务结束
+    sessionStarted     = [char]0x4F1A + [char]0x8BDD + [char]0x5F00 + [char]0x59CB  # 会话开始
+    sessionEnded       = [char]0x4F1A + [char]0x8BDD + [char]0x7ED3 + [char]0x675F  # 会话结束
+    toolDefault        = [char]0x5DE5 + [char]0x5177  # 工具
+    completed          = [char]0x5B8C + [char]0x6210  # 完成
 }
 
 function Build-NotificationMessage {
     param($Type, $Payload, $Config)
     $cwdName = if ($Config.showCwd) { Get-WorkingDirName $Payload.cwd } else { '' }
-    $cwdLabel = if ($cwdName) { "Project: $cwdName — " } else { '' }
+    $cwdLabel = if ($cwdName) { "$cwdName - " } else { '' }
+    $t = $script:NotifyTemplates[$Type]
+    $chs = $script:ChsBody
 
     switch ($Type) {
         'task_done' {
-            $title = 'Claude Code — Task Complete'
+            $title = $t.TitleEmoji + ' ' + $t.TitleSuffix
             if ($Config.showSummary -and $Payload.last_assistant_message) {
                 $body = Get-SummaryPreview $Payload.last_assistant_message $Config.summaryMaxChars
             } elseif ($cwdName) {
-                $body = "Project: $cwdName — response finished"
+                $body = $cwdLabel + $chs.responseFinished
             } else {
-                $body = 'Claude finished the current response'
+                $body = $chs.responseFinished
             }
-            return @{ Title = $title; Body = $body; Sound = 'Asterisk'; ToastAudio = 'Default' }
+            return @{ Title = $title; Body = $body; Sound = $t.Sound; ToastAudio = $t.ToastAudio }
         }
         'failed' {
             return @{
-                Title = 'Claude Code — Execution Failed'
-                Body  = "${cwdLabel}Claude stopped unexpectedly or encountered an error"
-                Sound = 'Hand'; ToastAudio = 'Alarm'
+                Title = $t.TitleEmoji + ' ' + $t.TitleSuffix
+                Body  = $cwdLabel + $chs.stoppedUnexpected
+                Sound = $t.Sound; ToastAudio = $t.ToastAudio
             }
         }
         'needs_input' {
             $ntype = if ($Payload.notification_type) { " ($($Payload.notification_type))" } else { '' }
             return @{
-                Title = 'Claude Code — Waiting for Input'
-                Body  = "${cwdLabel}Claude is waiting for your reply${ntype}"
-                Sound = 'Asterisk'; ToastAudio = 'IM'
+                Title = $t.TitleEmoji + ' ' + $t.TitleSuffix
+                Body  = $cwdLabel + $chs.waitingReply + $ntype
+                Sound = $t.Sound; ToastAudio = $t.ToastAudio
             }
         }
         'permission_required' {
-            $tool = if ($Payload.tool_name) { $Payload.tool_name } else { 'a tool' }
+            $tool = if ($Payload.tool_name) { $Payload.tool_name } else { $chs.toolDefault }
             $action = ''
             if ($Payload.tool_input) {
                 $inp = $Payload.tool_input
@@ -203,36 +275,37 @@ function Build-NotificationMessage {
                     $action = if ($inp.Length -gt 80) { $inp.Substring(0, 80) + [char]0x2026 } else { $inp }
                 } else { $action = "$inp" }
             }
-            $body = "${cwdLabel}Permission needed to run $tool"
+            $body = $cwdLabel + $chs.permissionNeeded + $tool
             if ($action) { $body += "`n$action" }
-            return @{ Title = 'Claude Code — Permission Required'; Body = $body; Sound = 'Exclamation'; ToastAudio = 'Reminder' }
+            return @{ Title = ($t.TitleEmoji + ' ' + $t.TitleSuffix); Body = $body; Sound = $t.Sound; ToastAudio = $t.ToastAudio }
         }
         'question' {
             return @{
-                Title = 'Claude Code — Question'
-                Body  = "${cwdLabel}Claude has a question for you"
-                Sound = 'Question'; ToastAudio = 'Reminder'
+                Title = $t.TitleEmoji + ' Claude ' + $t.TitleSuffix
+                Body  = $cwdLabel + $chs.hasQuestion
+                Sound = $t.Sound; ToastAudio = $t.ToastAudio
             }
         }
         'plan_ready' {
             return @{
-                Title = 'Claude Code — Plan Ready'
-                Body  = "${cwdLabel}A plan is ready for your review"
-                Sound = 'Exclamation'; ToastAudio = 'Reminder'
+                Title = $t.TitleEmoji + ' ' + $t.TitleSuffix
+                Body  = $cwdLabel + $chs.planReadyBody
+                Sound = $t.Sound; ToastAudio = $t.ToastAudio
             }
         }
         'subtask_done' {
             $sub = if ($Payload.teammate_name) { $Payload.teammate_name }
                    elseif ($Payload.task_subject) { $Payload.task_subject }
                    else { '' }
-            $body = if ($sub) { "Completed: $sub" } else { "${cwdLabel}Subtask / agent finished" }
-            return @{ Title = 'Claude Code — Subtask Done'; Body = $body; Sound = 'Asterisk'; ToastAudio = 'Default' }
+            $body = if ($sub) { $chs.completed + ': ' + $sub } else { $cwdLabel + $chs.subtaskFinished }
+            return @{ Title = ($t.TitleEmoji + ' ' + $t.TitleSuffix); Body = $body; Sound = $t.Sound; ToastAudio = $t.ToastAudio }
         }
         'session' {
-            $verb = if ($Payload.hook_event_name -eq 'SessionStart') { 'Started' } else { 'Ended' }
+            $emoji   = if ($Payload.hook_event_name -eq 'SessionStart') { [char]0x25B6 } else { [char]0x23F9 }
+            $verb    = if ($Payload.hook_event_name -eq 'SessionStart') { $chs.sessionStarted } else { $chs.sessionEnded }
             return @{
-                Title = "Claude Code — Session $verb"
-                Body  = if ($cwdName) { "Project: $cwdName" } else { '' }
+                Title = $emoji + ' ' + $verb
+                Body  = if ($cwdName) { $cwdName } else { '' }
                 Sound = 'Asterisk'; ToastAudio = 'Default'
             }
         }
