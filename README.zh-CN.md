@@ -30,7 +30,7 @@
 
 ```powershell
 # 克隆仓库
-git clone https://github.com/YOUR_USER/claude-code-toast.git
+git clone https://github.com/yibai99927/claude-code-toast.git
 cd claude-code-toast
 
 # 安装

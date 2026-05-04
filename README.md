@@ -30,7 +30,7 @@ Native Windows toast notifications for [Claude Code](https://code.claude.com) CL
 
 ```powershell
 # Clone the repo
-git clone https://github.com/YOUR_USER/claude-code-toast.git
+git clone https://github.com/yibai99927/claude-code-toast.git
 cd claude-code-toast
 
 # Install
