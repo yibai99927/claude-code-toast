@@ -52,6 +52,7 @@ function Load-NotifyConfig {
         debugLog       = $false
         language       = 'zh-CN'
         events         = @{}
+        webhooks       = @{ enabled = $false; endpoints = @() }
     }
     if (-not (Test-Path $Path)) { return $defaults }
     try {
@@ -439,6 +440,52 @@ function Escape-Xml {
     return $Text
 }
 
+# -------- webhooks --------
+
+function Send-Webhooks {
+    param($EventKey, $Title, $Body, $CwdName, $Config)
+    if (-not $Config.webhooks) { return }
+    $wh = $Config.webhooks
+    $whEnabled = if ($wh -is [hashtable]) { $wh['enabled'] } else { $wh.enabled }
+    if (-not $whEnabled) { return }
+    $endpoints = if ($wh -is [hashtable]) { $wh['endpoints'] } else { @($wh.endpoints) }
+    if ($null -eq $endpoints -or $endpoints.Count -eq 0) { return }
+
+    foreach ($ep in $endpoints) {
+        $epEvents = if ($ep -is [hashtable]) { $ep['events'] } else { $ep.events }
+        if ($null -eq $epEvents) { continue }
+        if ($EventKey -notin @($epEvents)) { continue }
+
+        $epType = if ($ep -is [hashtable]) { $ep['type'] } else { $ep.type }
+        $epUrl  = if ($ep -is [hashtable]) { $ep['url'] } else { $ep.url }
+        $epName = if ($ep -is [hashtable]) { $ep['name'] } else { $ep.name }
+        if ([string]::IsNullOrEmpty($epUrl)) { continue }
+
+        $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+
+        try {
+            switch ($epType) {
+                'wecom' {
+                    $mdContent = "## $Title`n> $Body"
+                    if ($CwdName) { $mdContent += "`n> Project: **$CwdName**" }
+                    $mdContent += "`n> $ts"
+                    $payload = @{
+                        msgtype  = 'markdown'
+                        markdown = @{ content = $mdContent }
+                    } | ConvertTo-Json -Depth 3 -Compress
+                    Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
+                    Write-NotifyLog "Webhook sent: $epName ($epType)" -Level 'INFO'
+                }
+                default {
+                    Write-NotifyLog "Unknown webhook type: $epType" -Level 'WARN'
+                }
+            }
+        } catch {
+            Write-NotifyLog "Webhook failed ($epName): $_" -Level 'WARN'
+        }
+    }
+}
+
 # -------- event config lookup --------
 
 function Get-EventConfigKey {
@@ -576,5 +623,8 @@ if ($doToast) {
 
 $delivery = if ($toastOk) { 'toast' } elseif ($balloonOk) { 'balloon' } else { 'console' }
 Write-NotifyLog "Delivered via $delivery`| title=$($Msg.Title)" -Level 'INFO'
+
+# Webhooks (e.g. WeChat Work, Slack — async, best-effort)
+Send-Webhooks -EventKey $eventCfgKey -Title $Msg.Title -Body $Msg.Body -CwdName $cwdLeaf -Config $Config
 
 exit 0

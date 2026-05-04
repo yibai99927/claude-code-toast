@@ -55,5 +55,20 @@
                                       "enabled":  false,
                                       "severity":  "low"
                                   }
-               }
+               },
+    "webhooks":  {
+                     "enabled":  false,
+                     "endpoints":  [
+                                       {
+                                           "name":  "my-wecom-bot",
+                                           "type":  "wecom",
+                                           "url":  "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY",
+                                           "events":  [
+                                                          "StopFailure",
+                                                          "PermissionRequest",
+                                                          "PreToolUse:AskUserQuestion"
+                                                      ]
+                                       }
+                                   ]
+                 }
 }

@@ -163,6 +163,17 @@ if (-not (Test-Path $ConfigPath)) {
             'SessionStart'               = [PSCustomObject]@{ enabled = $false; severity = 'low' }
             'SessionEnd'                 = [PSCustomObject]@{ enabled = $false; severity = 'low' }
         }
+        webhooks       = [PSCustomObject]@{
+            enabled   = $false
+            endpoints = @(
+                [PSCustomObject]@{
+                    name   = 'my-wecom-bot'
+                    type   = 'wecom'
+                    url    = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY'
+                    events = @('StopFailure', 'PermissionRequest', 'PreToolUse:AskUserQuestion')
+                }
+            )
+        }
     }
     $defaultConfig | ConvertTo-Json -Depth 4 | Out-File -FilePath $ConfigPath -Encoding UTF8
     Write-Host "  Default config created: $ConfigPath" -ForegroundColor Green
