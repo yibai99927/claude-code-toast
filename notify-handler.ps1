@@ -170,51 +170,51 @@ function Get-SummaryPreview {
 
 $script:NotifyTemplates = @{
     'task_done' = @{
-        TitleEmoji   = [char]0x2705       # check mark
-        TitleSuffix  = [char]0x4EFB + [char]0x52A1 + [char]0x5B8C + [char]0x6210  # 任务完成
+        TitleEmoji   = [char]0x2705
+        TitleSuffix  = [char]0x4EFB + [char]0x52A1 + [char]0x5B8C + [char]0x6210
         Sound        = 'Asterisk'
-        ToastAudio   = 'Default'
+        ToastAudio   = 'Default'             # soft completion chime
     }
     'failed' = @{
-        TitleEmoji   = [char]0x274C       # cross mark
-        TitleSuffix  = [char]0x6267 + [char]0x884C + [char]0x5F02 + [char]0x5E38  # 执行异常
+        TitleEmoji   = [char]0x274C
+        TitleSuffix  = [char]0x6267 + [char]0x884C + [char]0x5F02 + [char]0x5E38
         Sound        = 'Hand'
-        ToastAudio   = 'Alarm'
+        ToastAudio   = 'Looping.Alarm2'      # short alarm beep
     }
     'needs_input' = @{
-        TitleEmoji   = [char]0x23F3       # hourglass
-        TitleSuffix  = [char]0x7B49 + [char]0x5F85 + [char]0x8F93 + [char]0x5165  # 等待输入
+        TitleEmoji   = [char]0x23F3
+        TitleSuffix  = [char]0x7B49 + [char]0x5F85 + [char]0x8F93 + [char]0x5165
         Sound        = 'Asterisk'
-        ToastAudio   = 'IM'
+        ToastAudio   = 'IM'                  # message-style blip
     }
     'permission_required' = @{
-        TitleEmoji   = [char]::ConvertFromUtf32(0x1F510)  # lock with key
-        TitleSuffix  = [char]0x8BF7 + [char]0x6C42 + [char]0x6743 + [char]0x9650  # 请求权限
+        TitleEmoji   = [char]::ConvertFromUtf32(0x1F510)
+        TitleSuffix  = [char]0x8BF7 + [char]0x6C42 + [char]0x6743 + [char]0x9650
         Sound        = 'Exclamation'
-        ToastAudio   = 'Reminder'
+        ToastAudio   = 'Reminder'            # attention chime
     }
     'question' = @{
-        TitleEmoji   = [char]::ConvertFromUtf32(0x1F4AC)  # speech bubble
-        TitleSuffix  = [char]0x63D0 + [char]0x95EE         # 提问
+        TitleEmoji   = [char]::ConvertFromUtf32(0x1F4AC)
+        TitleSuffix  = [char]0x63D0 + [char]0x95EE
         Sound        = 'Question'
-        ToastAudio   = 'Reminder'
+        ToastAudio   = 'Looping.Alarm4'      # distinctive ping
     }
     'plan_ready' = @{
-        TitleEmoji   = [char]::ConvertFromUtf32(0x1F4CB)  # clipboard
-        TitleSuffix  = [char]0x8BA1 + [char]0x5212 + [char]0x5C31 + [char]0x7EEA  # 计划就绪
+        TitleEmoji   = [char]::ConvertFromUtf32(0x1F4CB)
+        TitleSuffix  = [char]0x8BA1 + [char]0x5212 + [char]0x5C31 + [char]0x7EEA
         Sound        = 'Exclamation'
-        ToastAudio   = 'Reminder'
+        ToastAudio   = 'Mail'                # email notification
     }
     'subtask_done' = @{
-        TitleEmoji   = [char]::ConvertFromUtf32(0x1F916)  # robot
-        TitleSuffix  = [char]0x5B50 + [char]0x4EFB + [char]0x52A1 + [char]0x5B8C + [char]0x6210  # 子任务完成
+        TitleEmoji   = [char]::ConvertFromUtf32(0x1F916)
+        TitleSuffix  = [char]0x5B50 + [char]0x4EFB + [char]0x52A1 + [char]0x5B8C + [char]0x6210
         Sound        = 'Asterisk'
-        ToastAudio   = 'Default'
+        ToastAudio   = 'Default'             # soft completion
     }
     'session' = @{
         Sound        = 'Asterisk'
-        ToastAudio   = 'Default'
-    }
+        ToastAudio   = 'Default'             # minimal
+}
 }
 
 # Chinese body strings (built from Unicode escapes)
