@@ -20,7 +20,15 @@ $script:HandlerVersion = '1.0.0'
 
 function Read-StdinJson {
     $raw = $null
-    try { $raw = [System.Console]::In.ReadToEnd() } catch { }
+    try {
+        # PS 5.1 on zh-CN Windows defaults to GBK (936) for stdin,
+        # but Claude Code sends UTF-8 JSON. Switch encoding to avoid
+        # garbled Chinese characters in last_assistant_message etc.
+        $prevEnc = [Console]::InputEncoding
+        [Console]::InputEncoding = [Text.Encoding]::UTF8
+        $raw = [System.Console]::In.ReadToEnd()
+        [Console]::InputEncoding = $prevEnc
+    } catch { }
     if ([string]::IsNullOrWhiteSpace($raw)) {
         try { $raw = ($input | Out-String) } catch { }
     }
