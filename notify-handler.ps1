@@ -9,8 +9,8 @@
   Dedup, quiet hours, per-event enable/disable all read from notify-config.json.
 #>
 param(
-    [string]$ConfigPath = "$env:USERPROFILE\claude-code-toast\notify-config.json",
-    [string]$LogDir = "$env:USERPROFILE\claude-code-toast\logs"
+    [string]$ConfigPath = "$env:USERPROFILE\.claude\claude-code-toast\notify-config.json",
+    [string]$LogDir = "$env:USERPROFILE\.claude\claude-code-toast\logs"
 )
 
 $ErrorActionPreference = 'Continue'
@@ -69,7 +69,7 @@ function Write-NotifyLog {
         [string]$Message,
         [string]$Level = 'INFO'
     )
-    $logDir = "$env:USERPROFILE\claude-code-toast\logs"
+    $logDir = "$env:USERPROFILE\.claude\claude-code-toast\logs"
     if (-not (Test-Path $logDir)) {
         try { New-Item -ItemType Directory -Path $logDir -Force | Out-Null } catch { return }
     }

@@ -28,19 +28,25 @@
 
 ## 快速开始
 
+```
+# 1. 添加市场（仅需一次）
+/plugin marketplace add yibai99927/claude-code-toast
+
+# 2. 安装插件
+/plugin install claude-code-toast@claude-code-toast
+```
+
+然后运行一次性 Windows 设置（创建开始菜单快捷方式以支持 toast 身份）：
+
 ```powershell
-# 克隆仓库
-git clone https://github.com/yibai99927/claude-code-toast.git
-cd claude-code-toast
-
-# 安装
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install-notify.ps1
-
-# 在 Claude Code 中验证
-/claude hooks
+# 定位插件缓存目录并运行设置脚本
+$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\claude-code-toast\claude-code-toast" -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
+powershell -NoProfile -ExecutionPolicy Bypass -File "$pluginRoot\setup.ps1"
 ```
 
 搞定。每次 Claude 完成响应，你都会收到原生 toast 通知。
+
+> **备选方式（克隆 + 安装）**：`git clone https://github.com/yibai99927/claude-code-toast.git && cd claude-code-toast && powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1` — 然后在 `~/.claude/settings.json` 的 `enabledPlugins` 中启用。
 
 ## 架构
 
@@ -136,41 +142,53 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install-notify.ps1
 }
 ```
 
+## 管理
+
+- **启用/禁用**：`/plugin disable claude-code-toast@claude-code-toast` / `/plugin enable claude-code-toast@claude-code-toast`
+- **更新**：`/plugin update claude-code-toast@claude-code-toast`
+
 ## 卸载
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\uninstall-notify.ps1
 ```
+# 1. 移除插件（hooks 自动清除）
+/plugin uninstall claude-code-toast@claude-code-toast
 
-此命令会从 `~/.claude/settings.json` 中移除所有通知 hooks 并删除快捷方式。自动创建备份。
+# 2. 清理快捷方式和用户数据（可选）
+powershell -NoProfile -ExecutionPolicy Bypass -File setup-uninstall.ps1
+```
 
 ## 文件结构
 
 ```
 claude-code-toast/
-  README.md               ← 英文说明
-  README.zh-CN.md          ← 中文说明（本文件）
-  notify-handler.ps1       ← 主处理器（所有 hooks 调用）
-  install-notify.ps1       ← 安全安装器（合并 settings.json）
-  uninstall-notify.ps1     ← 卸载器（移除 hooks）
-  notify-config.json       ← 用户配置文件
-  ClaudeCode-logo.ico      ← toast 通知图标
-  ClaudeCode-logo.jpg      ← 原始 logo 素材
-  logs/                    ← 运行日志（gitignore）
+  .claude-plugin/
+    plugin.json             ← 插件元数据
+    marketplace.json        ← 市场定义
+  hooks/
+    hooks.json              ← hook 声明（Claude Code 运行时自动合并）
+  notify-handler.ps1        ← 主处理器（所有 hooks 调用）
+  setup.ps1                 ← 一次性 AUMID 快捷方式 + 配置初始化
+  setup-uninstall.ps1       ← 快捷方式 + 用户数据清理
+  notify-config.json        ← 默认配置模板
+  ClaudeCode-logo.ico       ← toast 通知图标
+  ClaudeCode-logo.jpg       ← 原始 logo 素材
+  README.md                 ← 英文说明
+  README.zh-CN.md           ← 中文说明（本文件）
+  logs/                     ← 运行日志（gitignore，存储于 ~/.claude/claude-code-toast/）
 ```
 
 ## 故障排查
 
 | 现象 | 可能原因 | 解决方法 |
 |---|---|---|
-| 完全没通知 | Hook 未配置 | 在 Claude Code 中运行 `/hooks`；重新运行安装器 |
-| 有声音但无弹窗 | 专注助手或通知被禁用 | 检查 Windows 通知设置中 PowerShell 的权限 |
-| Toast 图标不对 | 快捷方式缺失或 AUMID 错误 | 重新运行安装器；检查 `%APPDATA%\...\ClaudeCodeNotify\claude-notify.lnk` |
-| 中文乱码 | PS 5.1 编码问题 | 确保 `.ps1` 为 UTF-8 with BOM（安装器已处理） |
-| 重复通知 | 存在多个 hook 条目 | 重新运行安装器（自动检测并跳过重复） |
+| 完全没通知 | 插件未启用 | 运行 `/plugin list` 确认；检查 settings.json 中 `enabledPlugins` |
+| 有声音但无弹窗 | 专注助手或 AUMID 未设置 | 检查 Windows 通知设置；重新运行 `setup.ps1` |
+| Toast 图标不对 | 快捷方式缺失或 AUMID 错误 | 重新运行 `setup.ps1`；检查 `%APPDATA%\...\ClaudeCodeNotify\claude-notify.lnk` |
+| 中文乱码 | PS 5.1 编码问题 | 确保 `.ps1` 为 UTF-8 with BOM（插件已处理） |
+| 重复通知 | settings.json 中旧 hooks 冲突 | 从 `~/.claude/settings.json` 中移除旧的 hook 条目 |
 | 权限通知未触发 | Hook 在权限弹窗前触发 | 正常行为 — hook 在权限弹窗*之前*触发 |
 
-查看 `logs/notify.log` 了解详细投递状态。
+查看 `~/.claude/claude-code-toast/logs/notify.log` 了解详细投递状态。
 
 ## 致谢
 

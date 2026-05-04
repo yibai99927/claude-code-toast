@@ -1,0 +1,11 @@
+{
+    "name": "claude-code-toast",
+    "version": "1.0.0",
+    "description": "Native Windows toast notifications for Claude Code - pure PowerShell, zero dependencies",
+    "author": {
+        "name": "Yibai Xue"
+    },
+    "license": "MIT",
+    "repository": "https://github.com/yibai99927/claude-code-toast",
+    "keywords": ["notifications", "windows", "toast", "powershell", "productivity"]
+}

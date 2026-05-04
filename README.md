@@ -28,19 +28,25 @@ Native Windows toast notifications for [Claude Code](https://code.claude.com) CL
 
 ## Quick Start
 
+```
+# 1. Add marketplace (one time)
+/plugin marketplace add yibai99927/claude-code-toast
+
+# 2. Install plugin
+/plugin install claude-code-toast@claude-code-toast
+```
+
+Then run the one-time Windows setup (Start Menu shortcut for toast identity):
+
 ```powershell
-# Clone the repo
-git clone https://github.com/yibai99927/claude-code-toast.git
-cd claude-code-toast
-
-# Install
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install-notify.ps1
-
-# Verify in Claude Code
-/claude hooks
+# Locate the plugin in cache and run setup
+$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\claude-code-toast\claude-code-toast" -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
+powershell -NoProfile -ExecutionPolicy Bypass -File "$pluginRoot\setup.ps1"
 ```
 
 That's it. Every time Claude finishes a response, you'll get a native toast notification.
+
+> **Alternative (clone + install)**: `git clone https://github.com/yibai99927/claude-code-toast.git && cd claude-code-toast && powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1` — then enable via `enabledPlugins` in `~/.claude/settings.json`.
 
 ## Architecture
 
@@ -137,41 +143,53 @@ Edit `notify-config.json` in the project directory:
 }
 ```
 
+## Managing
+
+- **Enable/disable**: `/plugin disable claude-code-toast@claude-code-toast` / `/plugin enable claude-code-toast@claude-code-toast`
+- **Update**: `/plugin update claude-code-toast@claude-code-toast`
+
 ## Uninstall
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\uninstall-notify.ps1
 ```
+# 1. Remove plugin (hooks auto-removed)
+/plugin uninstall claude-code-toast@claude-code-toast
 
-This removes all notification hooks from `~/.claude/settings.json` and deletes the shortcut. A backup is created automatically.
+# 2. Clean up shortcut and user data (optional)
+powershell -NoProfile -ExecutionPolicy Bypass -File setup-uninstall.ps1
+```
 
 ## File Structure
 
 ```
 claude-code-toast/
-  README.md               ← this file
-  README.zh-CN.md          ← Chinese version
-  notify-handler.ps1       ← main handler (called by all hooks)
-  install-notify.ps1       ← safe settings.json merger
-  uninstall-notify.ps1     ← hook remover
-  notify-config.json       ← user configuration
-  ClaudeCode-logo.ico      ← toast notification icon
-  ClaudeCode-logo.jpg      ← original logo source
-  logs/                    ← runtime logs (gitignored)
+  .claude-plugin/
+    plugin.json             ← plugin metadata
+    marketplace.json        ← marketplace definition
+  hooks/
+    hooks.json              ← hook declarations (auto-merged by Claude Code)
+  notify-handler.ps1        ← main handler (called by all hooks)
+  setup.ps1                 ← one-time AUMID shortcut + config setup
+  setup-uninstall.ps1       ← shortcut + user data cleanup
+  notify-config.json        ← default config template
+  ClaudeCode-logo.ico       ← toast notification icon
+  ClaudeCode-logo.jpg       ← original logo source
+  README.md                 ← this file
+  README.zh-CN.md           ← Chinese version
+  logs/                     ← runtime logs (gitignored, stored in ~/.claude/claude-code-toast/)
 ```
 
 ## Troubleshooting
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|
-| No notification at all | Hook not configured | Run `/hooks` in Claude Code; re-run installer |
-| Sound but no toast | Focus Assist or notification suppressed | Check Windows notification settings for PowerShell |
-| Toast shows wrong icon | Shortcut missing or wrong AUMID | Re-run installer; check `%APPDATA%\...\ClaudeCodeNotify\claude-notify.lnk` |
-| Chinese text is garbled | PS 5.1 encoding issue | Ensure `.ps1` is UTF-8 with BOM (installer handles this) |
-| Duplicate notifications | Multiple hook entries | Re-run installer (it detects and skips duplicates) |
+| No notification at all | Plugin not enabled | Run `/plugin list` to verify; check `enabledPlugins` in settings.json |
+| Sound but no toast | Focus Assist or AUMID not set up | Check Windows notification settings; re-run `setup.ps1` |
+| Toast shows wrong icon | Shortcut missing or wrong AUMID | Re-run `setup.ps1`; check `%APPDATA%\...\ClaudeCodeNotify\claude-notify.lnk` |
+| Chinese text is garbled | PS 5.1 encoding issue | Ensure `.ps1` is UTF-8 with BOM (plugin handles this) |
+| Duplicate notifications | Old hooks in settings.json conflicting | Remove old hook entries from `~/.claude/settings.json` |
 | Permission not triggering | Permission denied before hook fires | Normal — hook fires *before* the permission dialog |
 
-Check `logs/notify.log` for detailed delivery status.
+Check `~/.claude/claude-code-toast/logs/notify.log` for detailed delivery status.
 
 ## Acknowledgments
 

@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "Stop": [
+      {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ],
+    "StopFailure": [
+      {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ],
+    "Notification": [
+      {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ],
+    "PermissionRequest": [
+      {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ],
+    "PreToolUse": [
+      {"matcher": "AskUserQuestion", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]},
+      {"matcher": "ExitPlanMode",    "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ],
+    "SubagentStop": [
+      {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ],
+    "TaskCompleted": [
+      {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ]
+  }
+}
