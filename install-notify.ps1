@@ -82,11 +82,12 @@ public struct PropertyKey {
 }
 
 public static class ShortcutBuilder {
-    public static void Create(string lnkPath, string targetPath, string aumid, string desc) {
+    public static void Create(string lnkPath, string targetPath, string iconPath, string aumid, string desc) {
         var sl = (IShellLinkW)new CShellLink();
         sl.SetPath(targetPath);
         sl.SetDescription(desc);
         sl.SetShowCmd(1);
+        sl.SetIconLocation(iconPath, 0);
         var ps = (IPropertyStore)sl;
         var key = new PropertyKey {
             fmtid = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"),
@@ -112,7 +113,7 @@ public static class ShortcutBuilder {
 $shortcutOk = $false
 try {
     Add-Type -TypeDefinition $csharpShortcut -ErrorAction Stop
-    [ShortcutBuilder]::Create($shortcutLnk, 'powershell.exe', $AUMID, 'Claude Code Notification Launcher')
+    [ShortcutBuilder]::Create($shortcutLnk, 'powershell.exe', "$env:USERPROFILE\.local\bin\claude.exe", $AUMID, 'Claude Code Notification Launcher')
     Write-Host "  Shortcut created with AUMID: $AUMID" -ForegroundColor Green
     Write-Host "  Path: $shortcutLnk" -ForegroundColor Green
     $shortcutOk = $true
