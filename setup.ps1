@@ -158,7 +158,7 @@ if (-not (Test-Path $ConfigPath)) {
             'PermissionRequest'          = [PSCustomObject]@{ enabled = $true; severity = 'high' }
             'PreToolUse:AskUserQuestion' = [PSCustomObject]@{ enabled = $true; severity = 'high' }
             'PreToolUse:ExitPlanMode'    = [PSCustomObject]@{ enabled = $true; severity = 'high' }
-            'SubagentStop'               = [PSCustomObject]@{ enabled = $true; severity = 'low' }
+            'SubagentStop'               = [PSCustomObject]@{ enabled = $false; severity = 'low' }
             'TaskCompleted'              = [PSCustomObject]@{ enabled = $true; severity = 'low' }
             'SessionStart'               = [PSCustomObject]@{ enabled = $false; severity = 'low' }
             'SessionEnd'                 = [PSCustomObject]@{ enabled = $false; severity = 'low' }

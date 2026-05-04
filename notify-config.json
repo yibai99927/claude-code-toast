@@ -40,7 +40,7 @@
                                                    "severity":  "high"
                                                },
                    "SubagentStop":  {
-                                        "enabled":  true,
+                                        "enabled":  false,
                                         "severity":  "low"
                                     },
                    "TaskCompleted":  {
