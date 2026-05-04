@@ -2,9 +2,9 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-为 [Claude Code](https://code.claude.com) CLI 提供原生 Windows toast 通知 — 支持 emoji 标题、中文正文、零外部依赖。
+为 [Claude Code](https://code.claude.com) CLI 提供原生 Windows toast 通知 — 支持 emoji 标题、中文正文、IM webhook 转发、零外部依赖。
 
-> 纯 PowerShell 5.1 · WinRT Toast + 气泡提示回退 · 插件式安装 · 去重 & 免打扰
+> 纯 PowerShell 5.1 · WinRT Toast + 气泡提示回退 · 插件式安装 · 去重 & 免打扰 · Webhooks（企业微信 / Telegram / Discord / 飞书 / QQ）
 
 ---
 
@@ -18,6 +18,7 @@
 - **插件式安装** — 通过 `/plugin install` 一键安装，hooks 自动合并，无需手动编辑 settings.json
 - **去重机制** — 可配置时间窗口内抑制重复通知（默认 5 秒）
 - **免打扰时段** — 可选静音时段，低严重度事件在此期间静音
+- **IM webhook 转发** — 将通知转发到企业微信、Telegram、Discord、飞书、QQ（Qmsg）或任意 HTTP 兼容服务
 - **零依赖** — 无需 Node.js、Python、Go、Bun 或外部 PowerShell 模块
 
 ## 系统要求
@@ -133,9 +134,53 @@
     "TaskCompleted":        {"enabled": true, "severity": "low"},
     "SessionStart":         {"enabled": false, "severity": "low"},
     "SessionEnd":           {"enabled": false, "severity": "low"}
+  },
+  "webhooks": {
+    "enabled": false,
+    "endpoints": [
+      {"name": "wecom-example",  "type": "wecom",    "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY",        "at_mobiles": [], "at_all": false, "events": ["StopFailure", "PermissionRequest"]},
+      {"name": "telegram-example","type": "telegram", "url": "https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage",                "chat_id": "YOUR_CHAT_ID",       "events": ["StopFailure"]},
+      {"name": "discord-example", "type": "discord",  "url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN",                                             "events": ["StopFailure"]},
+      {"name": "feishu-example",  "type": "feishu",   "url": "https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_TOKEN",                                                  "events": ["StopFailure"]},
+      {"name": "qq-qmsg-example", "type": "http",     "url": "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",                                                              "events": ["StopFailure"]}
+    ]
   }
 }
 ```
+
+## Webhooks
+
+将通知通过 webhook 转发到 IM 平台。每个端点可按事件过滤。
+
+**支持的平台：**
+
+| 类型 | 平台 | 额外字段 |
+|------|------|---------|
+| `wecom` | 企业微信 | `at_mobiles`, `at_all` |
+| `telegram` | Telegram | `chat_id` |
+| `discord` | Discord | — |
+| `feishu` | 飞书 | — |
+| `http` | QQ Qmsg / 通用 HTTP | — |
+
+**示例：** 在企业微信上接收 `StopFailure` 和 `PermissionRequest` 告警：
+
+```jsonc
+"webhooks": {
+  "enabled": true,
+  "endpoints": [
+    {
+      "name": "my-wecom",
+      "type": "wecom",
+      "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY",
+      "at_mobiles": ["13800138000"],
+      "at_all": false,
+      "events": ["StopFailure", "PermissionRequest"]
+    }
+  ]
+}
+```
+
+将以上内容添加到 `notify-config.json` 中。包含所有平台示例的完整配置模板由 `setup.ps1` 生成。
 
 ## 管理
 
