@@ -30,8 +30,8 @@
 
 ```powershell
 # 克隆仓库
-git clone https://github.com/YOUR_USER/claude-code-notify.git
-cd claude-code-notify
+git clone https://github.com/YOUR_USER/claude-code-toast.git
+cd claude-code-toast
 
 # 安装
 powershell -NoProfile -ExecutionPolicy Bypass -File .\install-notify.ps1
@@ -45,7 +45,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install-notify.ps1
 ## 架构
 
 ```
-  Claude Code hooks                    claude-code-notify
+  Claude Code hooks                    claude-code-toast
   ─────────────────                    ──────────────────
 
   settings.json  ──Stop──────────────►  ┌──────────────────┐
@@ -147,7 +147,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\uninstall-notify.ps1
 ## 文件结构
 
 ```
-claude-code-notify/
+claude-code-toast/
   README.md               ← 英文说明
   README.zh-CN.md          ← 中文说明（本文件）
   notify-handler.ps1       ← 主处理器（所有 hooks 调用）

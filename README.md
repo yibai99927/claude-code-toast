@@ -30,8 +30,8 @@ Native Windows toast notifications for [Claude Code](https://code.claude.com) CL
 
 ```powershell
 # Clone the repo
-git clone https://github.com/YOUR_USER/claude-code-notify.git
-cd claude-code-notify
+git clone https://github.com/YOUR_USER/claude-code-toast.git
+cd claude-code-toast
 
 # Install
 powershell -NoProfile -ExecutionPolicy Bypass -File .\install-notify.ps1
@@ -45,7 +45,7 @@ That's it. Every time Claude finishes a response, you'll get a native toast noti
 ## Architecture
 
 ```
-  Claude Code hooks                    claude-code-notify
+  Claude Code hooks                    claude-code-toast
   ─────────────────                    ──────────────────
                                        
   settings.json  ──Stop──────────────►  ┌──────────────────┐
@@ -148,7 +148,7 @@ This removes all notification hooks from `~/.claude/settings.json` and deletes t
 ## File Structure
 
 ```
-claude-code-notify/
+claude-code-toast/
   README.md               ← this file
   README.zh-CN.md          ← Chinese version
   notify-handler.ps1       ← main handler (called by all hooks)

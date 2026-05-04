@@ -12,7 +12,7 @@
 #>
 
 $ErrorActionPreference = 'Stop'
-$ProjectDir = "$env:USERPROFILE\claude-code-notify"
+$ProjectDir = "$env:USERPROFILE\claude-code-toast"
 $UserClaudeDir = "$env:USERPROFILE\.claude"
 $HandlerPath = Join-Path $ProjectDir 'notify-handler.ps1'
 $ConfigPath = Join-Path $ProjectDir 'notify-config.json'
@@ -33,7 +33,7 @@ Write-Host ''
 Write-Host '[1/5] Creating Start Menu shortcut with AUMID...' -ForegroundColor Yellow
 
 $shortcutLnk = Join-Path $ShortcutDir 'claude-notify.lnk'
-$AUMID = 'ClaudeCode.Notify'
+$AUMID = 'ClaudeCode.Toast'
 
 # Inline C# to create .lnk with AppUserModelID via IShellLinkW + IPropertyStore
 $csharpShortcut = @'
@@ -113,7 +113,7 @@ public static class ShortcutBuilder {
 $shortcutOk = $false
 try {
     Add-Type -TypeDefinition $csharpShortcut -ErrorAction Stop
-    [ShortcutBuilder]::Create($shortcutLnk, 'powershell.exe', "$env:USERPROFILE\claude-code-notify\ClaudeCode-logo.ico", $AUMID, 'Claude Code Notification Launcher')
+    [ShortcutBuilder]::Create($shortcutLnk, 'powershell.exe', "$env:USERPROFILE\claude-code-toast\ClaudeCode-logo.ico", $AUMID, 'Claude Code Notification Launcher')
     Write-Host "  Shortcut created with AUMID: $AUMID" -ForegroundColor Green
     Write-Host "  Path: $shortcutLnk" -ForegroundColor Green
     $shortcutOk = $true

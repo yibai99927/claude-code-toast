@@ -9,8 +9,8 @@
   Dedup, quiet hours, per-event enable/disable all read from notify-config.json.
 #>
 param(
-    [string]$ConfigPath = "$env:USERPROFILE\claude-code-notify\notify-config.json",
-    [string]$LogDir = "$env:USERPROFILE\claude-code-notify\logs"
+    [string]$ConfigPath = "$env:USERPROFILE\claude-code-toast\notify-config.json",
+    [string]$LogDir = "$env:USERPROFILE\claude-code-toast\logs"
 )
 
 $ErrorActionPreference = 'Continue'
@@ -60,7 +60,7 @@ function Write-NotifyLog {
         [string]$Message,
         [string]$Level = 'INFO'
     )
-    $logDir = "$env:USERPROFILE\claude-code-notify\logs"
+    $logDir = "$env:USERPROFILE\claude-code-toast\logs"
     if (-not (Test-Path $logDir)) {
         try { New-Item -ItemType Directory -Path $logDir -Force | Out-Null } catch { return }
     }
@@ -330,7 +330,7 @@ function Test-WinRTAvailable {
     }
 }
 
-$script:ToastAumid = 'ClaudeCode.Notify'
+$script:ToastAumid = 'ClaudeCode.Toast'
 
 function Send-WinRTToast {
     param($Title, $Body, [string]$Audio = 'Default')
