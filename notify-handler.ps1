@@ -466,13 +466,22 @@ function Send-Webhooks {
         try {
             switch ($epType) {
                 'wecom' {
-                    $mdContent = "## $Title`n> $Body"
-                    if ($CwdName) { $mdContent += "`n> Project: **$CwdName**" }
-                    $mdContent += "`n> $ts"
-                    $payload = @{
-                        msgtype  = 'markdown'
-                        markdown = @{ content = $mdContent }
-                    } | ConvertTo-Json -Depth 3 -Compress
+                    # Build plain text with optional @ mentions
+                    $textContent = "$Title`n$Body"
+                    if ($CwdName) { $textContent += "`nProject: $CwdName" }
+                    $textContent += "`n$ts"
+
+                    $textPayload = @{ content = $textContent }
+                    $epAtAll = if ($ep -is [hashtable]) { $ep['at_all'] } else { $ep.at_all }
+                    $epMobiles = if ($ep -is [hashtable]) { $ep['at_mobiles'] } else { $ep.at_mobiles }
+
+                    if ($epAtAll) {
+                        $textPayload['mentioned_list'] = @('@all')
+                    } elseif ($null -ne $epMobiles -and $epMobiles.Count -gt 0) {
+                        $textPayload['mentioned_mobile_list'] = @($epMobiles)
+                    }
+
+                    $payload = @{ msgtype = 'text'; text = $textPayload } | ConvertTo-Json -Depth 3 -Compress
                     Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
                     Write-NotifyLog "Webhook sent: $epName ($epType)" -Level 'INFO'
                 }

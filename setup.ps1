@@ -167,10 +167,12 @@ if (-not (Test-Path $ConfigPath)) {
             enabled   = $false
             endpoints = @(
                 [PSCustomObject]@{
-                    name   = 'my-wecom-bot'
-                    type   = 'wecom'
-                    url    = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY'
-                    events = @('StopFailure', 'PermissionRequest', 'PreToolUse:AskUserQuestion')
+                    name       = 'my-wecom-bot'
+                    type       = 'wecom'
+                    url        = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY'
+                    at_mobiles = @()
+                    at_all     = $false
+                    events     = @('StopFailure', 'PermissionRequest', 'PreToolUse:AskUserQuestion')
                 }
             )
         }
