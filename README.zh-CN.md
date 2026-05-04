@@ -36,17 +36,11 @@
 /plugin install claude-code-toast@claude-code-toast
 ```
 
-然后运行一次性 Windows 设置（创建开始菜单快捷方式以支持 toast 身份）：
-
-```powershell
-# 定位插件缓存目录并运行设置脚本
-$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\claude-code-toast\claude-code-toast" -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
-powershell -NoProfile -ExecutionPolicy Bypass -File "$pluginRoot\setup.ps1"
-```
-
-搞定。每次 Claude 完成响应，你都会收到原生 toast 通知。
+搞定。首次通知触发时，插件会自动完成 Windows 快捷方式注册和配置文件初始化（无需手动运行 setup）。每次 Claude 完成响应，你都会收到原生 toast 通知。
 
 > **备选方式（克隆 + 安装）**：`git clone https://github.com/yibai99927/claude-code-toast.git && cd claude-code-toast && powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1` — 然后在 `~/.claude/settings.json` 的 `enabledPlugins` 中启用。
+>
+> **手动运行 setup**（如需）：`powershell -NoProfile -ExecutionPolicy Bypass -File "<plugin-path>\setup.ps1"` — 仅在自动 setup 未生效时使用。
 
 ## 架构
 

@@ -14,7 +14,55 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$script:HandlerVersion = '1.0.0'
+$script:HandlerVersion = '1.1.0'
+
+# =================================================================== auto-setup (first-run only)
+
+function Invoke-AutoSetup {
+    <#
+    .SYNOPSIS
+      Runs setup.ps1 automatically on first hook invocation.
+      Eliminates the manual post-install step.
+    #>
+    $markerFile = "$env:USERPROFILE\.claude\claude-code-toast\.setup-done"
+    if (Test-Path $markerFile -Type Leaf) { return }
+
+    $setupScript = Join-Path $PSScriptRoot 'setup.ps1'
+    if (-not (Test-Path $setupScript -Type Leaf)) {
+        # setup.ps1 not found — not fatal, notifications work without shortcut
+        try {
+            $logDir = "$env:USERPROFILE\.claude\claude-code-toast\logs"
+            if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
+            $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+            "$ts [WARN] Auto-setup: setup.ps1 not found at $setupScript" | Out-File -FilePath (Join-Path $logDir 'notify.log') -Append -Encoding UTF8
+        } catch { }
+        return
+    }
+
+    try {
+        $logDir = "$env:USERPROFILE\.claude\claude-code-toast\logs"
+        if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
+        $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+        "$ts [INFO] Auto-setup: running first-time Windows setup..." | Out-File -FilePath (Join-Path $logDir 'notify.log') -Append -Encoding UTF8
+
+        # Run setup.ps1 silently; capture output to setup.log
+        $setupOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File $setupScript 2>&1
+        $setupLogDir = "$env:USERPROFILE\.claude\claude-code-toast\logs"
+        if (-not (Test-Path $setupLogDir)) { New-Item -ItemType Directory -Path $setupLogDir -Force | Out-Null }
+        $setupOutput | Out-File -FilePath (Join-Path $setupLogDir 'setup.log') -Encoding UTF8
+
+        # Write marker so we never run setup again
+        '' | Out-File -FilePath $markerFile -Encoding UTF8
+
+        $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+        "$ts [INFO] Auto-setup: completed — shortcut + config initialized" | Out-File -FilePath (Join-Path $logDir 'notify.log') -Append -Encoding UTF8
+    } catch {
+        try {
+            $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+            "$ts [WARN] Auto-setup: failed — $_" | Out-File -FilePath (Join-Path $env:USERPROFILE\.claude\claude-code-toast\logs 'notify.log') -Append -Encoding UTF8
+        } catch { }
+    }
+}
 
 # =================================================================== helpers
 
@@ -528,6 +576,9 @@ function Get-EventConfigKey {
 }
 
 # =================================================================== main
+
+# First run: auto-create Start Menu shortcut + default config
+Invoke-AutoSetup
 
 $Config = Load-NotifyConfig $ConfigPath
 
