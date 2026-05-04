@@ -113,7 +113,7 @@ public static class ShortcutBuilder {
 $shortcutOk = $false
 try {
     Add-Type -TypeDefinition $csharpShortcut -ErrorAction Stop
-    [ShortcutBuilder]::Create($shortcutLnk, 'powershell.exe', "$env:USERPROFILE\.local\bin\claude.exe", $AUMID, 'Claude Code Notification Launcher')
+    [ShortcutBuilder]::Create($shortcutLnk, 'powershell.exe', "$env:USERPROFILE\claude-code-notify\ClaudeCode-logo.ico", $AUMID, 'Claude Code Notification Launcher')
     Write-Host "  Shortcut created with AUMID: $AUMID" -ForegroundColor Green
     Write-Host "  Path: $shortcutLnk" -ForegroundColor Green
     $shortcutOk = $true
