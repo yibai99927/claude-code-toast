@@ -173,6 +173,10 @@ claude-code-toast/
 
 Check `logs/notify.log` for detailed delivery status.
 
+## Acknowledgments
+
+Inspired by [claude-notifications-go](https://github.com/777genius/claude-notifications-go) by @777genius — a cross-platform notification plugin for Claude Code written in Go. This project reimagines the concept as a pure PowerShell implementation for Windows.
+
 ## License
 
 MIT

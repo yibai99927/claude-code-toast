@@ -172,6 +172,10 @@ claude-code-toast/
 
 查看 `logs/notify.log` 了解详细投递状态。
 
+## 致谢
+
+本项目受 [claude-notifications-go](https://github.com/777genius/claude-notifications-go)（@777genius）启发 — 一个用 Go 编写的跨平台 Claude Code 通知插件。本项目以纯 PowerShell 重新实现，专为 Windows 优化。
+
 ## License
 
 MIT
