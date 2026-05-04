@@ -60,15 +60,47 @@
                      "enabled":  false,
                      "endpoints":  [
                                        {
-                                           "name":  "my-wecom-bot",
+                                           "name":  "wecom-example",
                                            "type":  "wecom",
                                            "url":  "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY",
                                            "at_mobiles":  [],
                                            "at_all":  false,
                                            "events":  [
                                                           "StopFailure",
-                                                          "PermissionRequest",
-                                                          "PreToolUse:AskUserQuestion"
+                                                          "PermissionRequest"
+                                                      ]
+                                       },
+                                       {
+                                           "name":  "telegram-example",
+                                           "type":  "telegram",
+                                           "url":  "https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage",
+                                           "chat_id":  "YOUR_CHAT_ID",
+                                           "events":  [
+                                                          "StopFailure"
+                                                      ]
+                                       },
+                                       {
+                                           "name":  "discord-example",
+                                           "type":  "discord",
+                                           "url":  "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN",
+                                           "events":  [
+                                                          "StopFailure"
+                                                      ]
+                                       },
+                                       {
+                                           "name":  "feishu-example",
+                                           "type":  "feishu",
+                                           "url":  "https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_TOKEN",
+                                           "events":  [
+                                                          "StopFailure"
+                                                      ]
+                                       },
+                                       {
+                                           "name":  "qq-qmsg-example",
+                                           "type":  "http",
+                                           "url":  "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",
+                                           "events":  [
+                                                          "StopFailure"
                                                       ]
                                        }
                                    ]

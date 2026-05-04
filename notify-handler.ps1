@@ -462,33 +462,55 @@ function Send-Webhooks {
         if ([string]::IsNullOrEmpty($epUrl)) { continue }
 
         $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        $textContent = "$Title`n$Body"
+        if ($CwdName) { $textContent += "`nProject: $CwdName" }
+        $textContent += "`n$ts"
 
         try {
             switch ($epType) {
                 'wecom' {
-                    # Build plain text with optional @ mentions
-                    $textContent = "$Title`n$Body"
-                    if ($CwdName) { $textContent += "`nProject: $CwdName" }
-                    $textContent += "`n$ts"
-
                     $textPayload = @{ content = $textContent }
                     $epAtAll = if ($ep -is [hashtable]) { $ep['at_all'] } else { $ep.at_all }
                     $epMobiles = if ($ep -is [hashtable]) { $ep['at_mobiles'] } else { $ep.at_mobiles }
-
                     if ($epAtAll) {
                         $textPayload['mentioned_list'] = @('@all')
                     } elseif ($null -ne $epMobiles -and $epMobiles.Count -gt 0) {
                         $textPayload['mentioned_mobile_list'] = @($epMobiles)
                     }
-
                     $payload = @{ msgtype = 'text'; text = $textPayload } | ConvertTo-Json -Depth 3 -Compress
                     Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
-                    Write-NotifyLog "Webhook sent: $epName ($epType)" -Level 'INFO'
+                }
+                'telegram' {
+                    $epChatId = if ($ep -is [hashtable]) { $ep['chat_id'] } else { $ep.chat_id }
+                    $payload = @{
+                        chat_id    = $epChatId
+                        text       = $textContent
+                        parse_mode = 'HTML'
+                    } | ConvertTo-Json -Depth 2 -Compress
+                    Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
+                }
+                'discord' {
+                    $payload = @{ content = $textContent } | ConvertTo-Json -Depth 2 -Compress
+                    Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
+                }
+                'feishu' {
+                    $payload = @{
+                        msg_type = 'text'
+                        content  = @{ text = $textContent }
+                    } | ConvertTo-Json -Depth 3 -Compress
+                    Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
+                }
+                'http' {
+                    # Generic webhook for QQ (Qmsg) and other services
+                    $payload = @{ content = $textContent } | ConvertTo-Json -Depth 2 -Compress
+                    Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
                 }
                 default {
                     Write-NotifyLog "Unknown webhook type: $epType" -Level 'WARN'
+                    continue
                 }
             }
+            Write-NotifyLog "Webhook sent: $epName ($epType)" -Level 'INFO'
         } catch {
             Write-NotifyLog "Webhook failed ($epName): $_" -Level 'WARN'
         }
