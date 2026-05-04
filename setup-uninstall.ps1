@@ -8,7 +8,7 @@
 
 $ErrorActionPreference = 'Continue'
 $UserDataDir = "$env:USERPROFILE\.claude\claude-code-toast"
-$ShortcutDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\ClaudeCodeNotify"
+$ShortcutDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\claude-code-toast"
 
 Write-Host '=== claude-code-toast Cleanup ===' -ForegroundColor Cyan
 Write-Host ''

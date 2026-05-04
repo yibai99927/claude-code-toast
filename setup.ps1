@@ -17,7 +17,7 @@ $UserClaudeDir = "$env:USERPROFILE\.claude"
 $UserDataDir = Join-Path $UserClaudeDir 'claude-code-toast'
 $ConfigPath = Join-Path $UserDataDir 'notify-config.json'
 $IconPath = "$PSScriptRoot\ClaudeCode-logo.ico"
-$ShortcutDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\ClaudeCodeNotify"
+$ShortcutDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\claude-code-toast"
 
 foreach ($d in @($UserDataDir, $ShortcutDir)) {
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
@@ -31,7 +31,7 @@ Write-Host ''
 # ===================================================================
 Write-Host '[1/2] Creating Start Menu shortcut with AUMID...' -ForegroundColor Yellow
 
-$shortcutLnk = Join-Path $ShortcutDir 'claude-notify.lnk'
+$shortcutLnk = Join-Path $ShortcutDir 'claude-code-toast.lnk'
 $AUMID = 'ClaudeCode.Toast'
 
 $csharpShortcut = @'
