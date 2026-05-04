@@ -1,0 +1,27 @@
+{
+  "enableToast": true,
+  "enableSound": true,
+  "quietHours": {
+    "enabled": false,
+    "start": "22:00",
+    "end": "08:00"
+  },
+  "minSeverity": "low",
+  "dedupeSeconds": 5,
+  "showCwd": true,
+  "showSummary": true,
+  "summaryMaxChars": 150,
+  "debugLog": false,
+  "events": {
+    "Stop": {"enabled": true, "severity": "low"},
+    "StopFailure": {"enabled": true, "severity": "high"},
+    "Notification": {"enabled": true, "severity": "medium"},
+    "PermissionRequest": {"enabled": true, "severity": "high"},
+    "PreToolUse:AskUserQuestion": {"enabled": true, "severity": "high"},
+    "PreToolUse:ExitPlanMode": {"enabled": true, "severity": "high"},
+    "SubagentStop": {"enabled": true, "severity": "low"},
+    "TaskCompleted": {"enabled": true, "severity": "low"},
+    "SessionStart": {"enabled": false, "severity": "low"},
+    "SessionEnd": {"enabled": false, "severity": "low"}
+  }
+}
