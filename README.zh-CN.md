@@ -100,6 +100,8 @@
 | `SessionStart` | 会话开始 *（默认禁用）* | ▶️ 会话开始 | Asterisk |
 | `SessionEnd` | 会话结束 *（默认禁用）* | ⏹️ 会话结束 | Asterisk |
 
+> 如需关闭子任务完成通知，请同时关闭 `SubagentStop` 和 `TaskCompleted`；主任务完成通知保留使用 `Stop`。
+
 > **为什么用 PreToolUse 监听 AskUserQuestion / ExitPlanMode？**
 > Plan Mode 下 `Notification` 事件对 `AskUserQuestion` 可能不触发（[claude-code#42487](https://github.com/anthropics/claude-code/issues/42487)）。我们通过 `PreToolUse` 配合 tool-name matcher 作为可靠兜底。
 

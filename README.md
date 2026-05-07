@@ -101,6 +101,8 @@ That's it. The plugin automatically creates the Windows toast identity shortcut 
 | `SessionStart` | Session begins *(disabled)* | ▶️ 会话开始 | Asterisk |
 | `SessionEnd` | Session ends *(disabled)* | ⏹️ 会话结束 | Asterisk |
 
+> To disable subtask completion notifications, disable both `SubagentStop` and `TaskCompleted`; keep `Stop` enabled for the main task completion notification.
+
 > **Why PreToolUse for AskUserQuestion / ExitPlanMode?**
 > In Plan Mode, `Notification` may not fire reliably for `AskUserQuestion` ([claude-code#42487](https://github.com/anthropics/claude-code/issues/42487)). We monitor `PreToolUse` with tool-name matchers as a reliable fallback.
 
