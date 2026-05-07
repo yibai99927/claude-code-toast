@@ -37,17 +37,11 @@ Native Windows toast notifications for [Claude Code](https://code.claude.com) CL
 /plugin install claude-code-toast@claude-code-toast
 ```
 
-Then run the one-time Windows setup (Start Menu shortcut for toast identity):
-
-```powershell
-# Locate the plugin in cache and run setup
-$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\claude-code-toast\claude-code-toast" -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
-powershell -NoProfile -ExecutionPolicy Bypass -File "$pluginRoot\setup.ps1"
-```
-
-That's it. Every time Claude finishes a response, you'll get a native toast notification.
+That's it. The plugin automatically creates the Windows toast identity shortcut and initializes its config on the first notification, so no manual setup step is required. Every time Claude finishes a response, you'll get a native toast notification.
 
 > **Alternative (clone + install)**: `git clone https://github.com/yibai99927/claude-code-toast.git && cd claude-code-toast && powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1` — then enable via `enabledPlugins` in `~/.claude/settings.json`.
+>
+> **Manual setup (if needed)**: `powershell -NoProfile -ExecutionPolicy Bypass -File "<plugin-path>\setup.ps1"` — only use this if automatic setup does not take effect.
 
 ## Architecture
 
