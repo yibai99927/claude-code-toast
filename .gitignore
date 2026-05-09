@@ -2,3 +2,4 @@ logs/
 *.jpg
 *.tmp
 image-cards/
+.worktrees/
