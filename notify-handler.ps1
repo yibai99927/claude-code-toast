@@ -47,12 +47,22 @@ function Invoke-AutoSetup {
 
         # Run setup.ps1 silently; capture output to setup.log
         $setupOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File $setupScript 2>&1
+        $setupExitCode = $LASTEXITCODE
         $setupLogDir = "$env:USERPROFILE\.claude\claude-code-toast\logs"
         if (-not (Test-Path $setupLogDir)) { New-Item -ItemType Directory -Path $setupLogDir -Force | Out-Null }
         $setupOutput | Out-File -FilePath (Join-Path $setupLogDir 'setup.log') -Encoding UTF8
 
-        # Write marker so we never run setup again
-        '' | Out-File -FilePath $markerFile -Encoding UTF8
+        $configPath = "$env:USERPROFILE\.claude\claude-code-toast\notify-config.json"
+        if ($setupExitCode -ne 0 -and -not (Test-Path $configPath)) {
+            $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+            "$ts [WARN] Auto-setup: setup.ps1 exited with code $setupExitCode — will retry on next hook" | Out-File -FilePath (Join-Path $logDir 'notify.log') -Append -Encoding UTF8
+            return
+        }
+
+        # Write marker once config exists (shortcut failure is non-fatal)
+        if (Test-Path $configPath) {
+            '' | Out-File -FilePath $markerFile -Encoding UTF8
+        }
 
         $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
         "$ts [INFO] Auto-setup: completed — shortcut + config initialized" | Out-File -FilePath (Join-Path $logDir 'notify.log') -Append -Encoding UTF8
@@ -531,10 +541,13 @@ function Send-Webhooks {
                 'telegram' {
                     $epChatId = if ($ep -is [hashtable]) { $ep['chat_id'] } else { $ep.chat_id }
                     $payload = @{
-                        chat_id    = $epChatId
-                        text       = $textContent
-                        parse_mode = 'HTML'
+                        chat_id = $epChatId
+                        text    = $textContent
                     } | ConvertTo-Json -Depth 2 -Compress
+                    Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
+                }
+                'qmsg' {
+                    $payload = @{ msg = $textContent } | ConvertTo-Json -Depth 2 -Compress
                     Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
                 }
                 'discord' {
@@ -549,7 +562,7 @@ function Send-Webhooks {
                     Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
                 }
                 'http' {
-                    # Generic webhook for QQ (Qmsg) and other services
+                    # Generic JSON webhook; use type "qmsg" for QQ Qmsg API
                     $payload = @{ content = $textContent } | ConvertTo-Json -Depth 2 -Compress
                     Invoke-RestMethod -Uri $epUrl -Method Post -Body $payload -ContentType 'application/json; charset=utf-8' -TimeoutSec 10 | Out-Null
                 }
@@ -632,14 +645,13 @@ if (-not $evEnabled) {
 }
 
 # Severity gate
-$sevRank = Get-SeverityRank $evSeverity
-$minRank = Get-SeverityRank $Config.minSeverity
-if ($sevRank -lt $minRank) {
+if (-not (Test-SeverityGate $evSeverity $Config.minSeverity)) {
     Write-NotifyLog "Event filtered by minSeverity: $eventCfgKey (sev=$evSeverity < min=$($Config.minSeverity))"
     exit 0
 }
 
 # Quiet hours (skip for high-severity events)
+$sevRank = Get-SeverityRank $evSeverity
 if ($sevRank -lt 2) {
     $qh = if ($Config.quietHours -is [hashtable]) { $Config.quietHours } else {
         @{ enabled = $Config.quietHours.enabled; start = $Config.quietHours.start; end = $Config.quietHours.end }

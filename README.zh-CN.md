@@ -10,7 +10,7 @@
 
 ## 功能特性
 
-- **8 种 hook 事件** — Stop、StopFailure、Notification、PermissionRequest、PreToolUse（AskUserQuestion + ExitPlanMode）、SubagentStop、TaskCompleted
+- **10 种 hook 事件** — Stop、StopFailure、Notification、PermissionRequest、PreToolUse（AskUserQuestion + ExitPlanMode）、SubagentStop、TaskCompleted、SessionStart、SessionEnd
 - **原生 Windows toast** — 右下角滑出，使用自定义 Claude Code 图标和专属 AUMID
 - **气泡提示回退** — WinRT toast 不可用时自动使用系统托盘气泡
 - **系统声音** — 按严重程度区分提示音（信息 / 警告 / 错误）
@@ -56,6 +56,8 @@
                  ──PreToolUse────────►  │                  │
                  ──SubagentStop──────►  │  (所有 hook 事件  │
                  ──TaskCompleted─────►  │   的统一入口)     │
+                 ──SessionStart──────►  │                  │
+                 ──SessionEnd────────►  │                  │
                                         └──────┬───────────┘
                                                │
                                     ┌──────────┴──────────┐
@@ -144,7 +146,7 @@
       {"name": "telegram-example","type": "telegram", "url": "https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage",                "chat_id": "YOUR_CHAT_ID",       "events": ["StopFailure"]},
       {"name": "discord-example", "type": "discord",  "url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN",                                             "events": ["StopFailure"]},
       {"name": "feishu-example",  "type": "feishu",   "url": "https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_TOKEN",                                                  "events": ["StopFailure"]},
-      {"name": "qq-qmsg-example", "type": "http",     "url": "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",                                                              "events": ["StopFailure"]}
+      {"name": "qq-qmsg-example", "type": "qmsg",     "url": "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",                                                              "events": ["StopFailure"]}
     ]
   }
 }
@@ -162,7 +164,8 @@
 | `telegram` | Telegram | `chat_id` |
 | `discord` | Discord | — |
 | `feishu` | 飞书 | — |
-| `http` | QQ Qmsg / 通用 HTTP | — |
+| `qmsg` | QQ Qmsg | — |
+| `http` | 通用 JSON webhook | 发送 `{"content": "..."}` |
 
 **示例：** 在企业微信上接收 `StopFailure` 和 `PermissionRequest` 告警：
 
@@ -213,7 +216,6 @@ claude-code-toast/
   setup-uninstall.ps1       ← 快捷方式 + 用户数据清理
   notify-config.json        ← 默认配置模板
   ClaudeCode-logo.ico       ← toast 通知图标
-  ClaudeCode-logo.jpg       ← 原始 logo 素材
   README.md                 ← 英文说明
   README.zh-CN.md           ← 中文说明（本文件）
   logs/                     ← 运行日志（gitignore，存储于 ~/.claude/claude-code-toast/）

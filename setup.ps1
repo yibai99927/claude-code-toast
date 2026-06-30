@@ -195,7 +195,7 @@ if (-not (Test-Path $ConfigPath)) {
                 },
                 [PSCustomObject]@{
                     name   = 'qq-qmsg-example'
-                    type   = 'http'
+                    type   = 'qmsg'
                     url    = 'https://qmsg.zendee.cn/api/v2/send/YOUR_KEY'
                     events = @('StopFailure')
                 }
