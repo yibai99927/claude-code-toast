@@ -21,6 +21,12 @@
     ],
     "TaskCompleted": [
       {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ],
+    "SessionStart": [
+      {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
+    ],
+    "SessionEnd": [
+      {"matcher": "", "hooks": [{"type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/notify-handler.ps1\""}]}
     ]
   }
 }

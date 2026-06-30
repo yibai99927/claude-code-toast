@@ -10,7 +10,7 @@ Native Windows toast notifications for [Claude Code](https://code.claude.com) CL
 
 ## Features
 
-- **8 hook events** — Stop, StopFailure, Notification, PermissionRequest, PreToolUse (AskUserQuestion + ExitPlanMode), SubagentStop, TaskCompleted
+- **10 hook events** — Stop, StopFailure, Notification, PermissionRequest, PreToolUse (AskUserQuestion + ExitPlanMode), SubagentStop, TaskCompleted, SessionStart, SessionEnd
 - **Native Windows toast** — slides in from bottom-right with custom Claude Code icon and AUMID
 - **Balloon tip fallback** — system-tray popup if WinRT toast is unavailable
 - **System sounds** — different audio cues per severity (info / warning / error)
@@ -56,7 +56,8 @@ That's it. The plugin automatically creates the Windows toast identity shortcut 
                  ──PreToolUse────────►  │                  │
                  ──SubagentStop──────►  │  (single entry   │
                  ──TaskCompleted─────►  │   point for all  │
-                                        │   hook events)   │
+                 ──SessionStart──────►  │   hook events)   │
+                 ──SessionEnd────────►  │                  │
                                         └──────┬───────────┘
                                                │
                                     ┌──────────┴──────────┐
@@ -145,7 +146,7 @@ Edit `~/.claude/claude-code-toast/notify-config.json`:
       {"name": "telegram-example","type": "telegram", "url": "https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage",                "chat_id": "YOUR_CHAT_ID",       "events": ["StopFailure"]},
       {"name": "discord-example", "type": "discord",  "url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN",                                             "events": ["StopFailure"]},
       {"name": "feishu-example",  "type": "feishu",   "url": "https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_TOKEN",                                                  "events": ["StopFailure"]},
-      {"name": "qq-qmsg-example", "type": "http",     "url": "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",                                                              "events": ["StopFailure"]}
+      {"name": "qq-qmsg-example", "type": "qmsg",     "url": "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",                                                              "events": ["StopFailure"]}
     ]
   }
 }
@@ -163,7 +164,8 @@ Forward notifications to IM platforms via webhook. Each endpoint can filter whic
 | `telegram` | Telegram | `chat_id` |
 | `discord` | Discord | — |
 | `feishu` | Feishu (飞书) | — |
-| `http` | QQ Qmsg / generic HTTP | — |
+| `qmsg` | QQ Qmsg | — |
+| `http` | Generic JSON webhook | Sends `{"content": "..."}` |
 
 **Example:** Receive `StopFailure` and `PermissionRequest` alerts on WeChat Work:
 
@@ -214,7 +216,6 @@ claude-code-toast/
   setup-uninstall.ps1       ← shortcut + user data cleanup
   notify-config.json        ← default config template
   ClaudeCode-logo.ico       ← toast notification icon
-  ClaudeCode-logo.jpg       ← original logo source
   README.md                 ← this file
   README.zh-CN.md           ← Chinese version
   logs/                     ← runtime logs (gitignored, stored in ~/.claude/claude-code-toast/)
