@@ -4,21 +4,21 @@
 
 Native Windows toast notifications for [Claude Code](https://code.claude.com) CLI — with emoji titles, Chinese/English body text, IM webhook forwarding, and zero external dependencies.
 
-> Pure PowerShell 5.1 · WinRT Toast + Balloon Tip fallback · Plugin-based · Dedup & quiet hours · Webhooks (WeChat Work / Telegram / Discord / Feishu / QQ)
+> Pure PowerShell 5.1 · WinRT Toast + Balloon Tip fallback · Plugin-based · File-backed dedup & quiet hours · Async Webhooks (WeChat Work / Telegram / Discord / Feishu / DingTalk / Slack / QQ / Bark / PushPlus)
 
 ---
 
 ## Features
 
 - **10 hook events** — Stop, StopFailure, Notification, PermissionRequest, PreToolUse (AskUserQuestion + ExitPlanMode), SubagentStop, TaskCompleted, SessionStart, SessionEnd
-- **Native Windows toast** — slides in from bottom-right with custom Claude Code icon and AUMID
-- **Balloon tip fallback** — system-tray popup if WinRT toast is unavailable
+- **Native Windows toast** — custom icon, click-to-open project folder, dedicated AUMID
+- **Balloon tip fallback** — Claude Code icon when WinRT is unavailable
 - **System sounds** — different audio cues per severity (info / warning / error)
 - **Emoji + i18n** — emoji icons in titles, Chinese body text, fully PS 5.1 compatible
 - **Plugin-based** — install via `/plugin install`, auto-merged hooks, no manual settings.json editing
-- **Deduplication** — suppresses duplicate notifications within a configurable window (default 5 s)
-- **Quiet hours** — optional time window to mute low-severity notifications
-- **IM webhook forwarding** — forward notifications to WeChat Work, Telegram, Discord, Feishu, QQ (Qmsg), or any HTTP-compatible service
+- **File-backed dedup** — persists across hook processes (`~/.claude/claude-code-toast/.dedup-cache.json`)
+- **Quiet hours** — global mute window + per-event `respectQuietHours`
+- **Async IM webhooks** — non-blocking hook delivery
 - **Zero dependencies** — no Node.js, Python, Go, Bun, or external PowerShell modules required
 
 ## Requirements
@@ -125,17 +125,18 @@ Edit `~/.claude/claude-code-toast/notify-config.json`:
   "showCwd": true,              // Show project directory name in body
   "showSummary": true,          // Show last assistant message preview (Stop event)
   "summaryMaxChars": 150,       // Truncate summary at N characters
-  "debugLog": false,            // Log full payload JSON
+  "debugLog": false,            // Sanitized payload debug logging
   "language": "zh-CN",          // "en" for English, "zh-CN" for Chinese
+  "toastClickAction": "openFolder", // Toast click: openFolder | none
   "events": {
-    "Stop":                 {"enabled": true, "severity": "low"},
-    "StopFailure":          {"enabled": true, "severity": "high"},
-    "Notification":         {"enabled": true, "severity": "medium"},
-    "PermissionRequest":    {"enabled": true, "severity": "high"},
-    "PreToolUse:AskUserQuestion": {"enabled": true, "severity": "high"},
-    "PreToolUse:ExitPlanMode":    {"enabled": true, "severity": "high"},
-    "SubagentStop":         {"enabled": false, "severity": "low"},
-    "TaskCompleted":        {"enabled": true, "severity": "low"},
+    "Stop":                 {"enabled": true, "severity": "low", "respectQuietHours": true},
+    "StopFailure":          {"enabled": true, "severity": "high", "respectQuietHours": false},
+    "Notification":         {"enabled": true, "severity": "medium", "respectQuietHours": true},
+    "PermissionRequest":    {"enabled": true, "severity": "high", "respectQuietHours": false},
+    "PreToolUse:AskUserQuestion": {"enabled": true, "severity": "high", "respectQuietHours": false},
+    "PreToolUse:ExitPlanMode":    {"enabled": true, "severity": "high", "respectQuietHours": false},
+    "SubagentStop":         {"enabled": false, "severity": "low", "respectQuietHours": true},
+    "TaskCompleted":        {"enabled": false, "severity": "low", "respectQuietHours": true},
     "SessionStart":         {"enabled": false, "severity": "low"},
     "SessionEnd":           {"enabled": false, "severity": "low"}
   },
@@ -165,7 +166,13 @@ Forward notifications to IM platforms via webhook. Each endpoint can filter whic
 | `discord` | Discord | — |
 | `feishu` | Feishu (飞书) | — |
 | `qmsg` | QQ Qmsg | — |
+| `dingtalk` | DingTalk | — |
+| `slack` | Slack | — |
+| `bark` | Bark (iOS) | `group` |
+| `pushplus` | PushPlus | `token` |
 | `http` | Generic JSON webhook | Sends `{"content": "..."}` |
+
+See [`notify-config.schema.json`](notify-config.schema.json) for the full config schema.
 
 **Example:** Receive `StopFailure` and `PermissionRequest` alerts on WeChat Work:
 
@@ -207,18 +214,31 @@ powershell -NoProfile -ExecutionPolicy Bypass -File setup-uninstall.ps1
 ```
 claude-code-toast/
   .claude-plugin/
-    plugin.json             ← plugin metadata
+    plugin.json             ← plugin metadata (single version source)
     marketplace.json        ← marketplace definition
+  lib/                      ← modular handler libraries
   hooks/
     hooks.json              ← hook declarations (auto-merged by Claude Code)
-  notify-handler.ps1        ← main handler (called by all hooks)
-  setup.ps1                 ← one-time AUMID shortcut + config setup
+  notify-handler.ps1        ← entry point (called by all hooks)
+  webhook-worker.ps1        ← async webhook background worker
+  setup.ps1                 ← AUMID shortcut + config setup
   setup-uninstall.ps1       ← shortcut + user data cleanup
   notify-config.json        ← default config template
+  notify-config.schema.json ← JSON Schema for config
+  tests/run-tests.ps1       ← unit tests (Windows PowerShell)
+  CHANGELOG.md              ← release notes
   ClaudeCode-logo.ico       ← toast notification icon
   README.md                 ← this file
   README.zh-CN.md           ← Chinese version
   logs/                     ← runtime logs (gitignored, stored in ~/.claude/claude-code-toast/)
+```
+
+## Tests
+
+Run on Windows PowerShell:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/run-tests.ps1
 ```
 
 ## Troubleshooting
