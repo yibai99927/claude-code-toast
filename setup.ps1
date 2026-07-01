@@ -12,6 +12,10 @@
   2. Copies default config to ~/.claude/claude-code-toast/ if absent
 #>
 
+param(
+    [switch]$ShortcutOnly
+)
+
 $ErrorActionPreference = 'Stop'
 $UserClaudeDir = "$env:USERPROFILE\.claude"
 $UserDataDir = Join-Path $UserClaudeDir 'claude-code-toast'
@@ -109,6 +113,7 @@ public static class ShortcutBuilder {
 '@
 
 $shortcutOk = $false
+$aumidOk = $false
 try {
     Add-Type -TypeDefinition $csharpShortcut -ErrorAction Stop
     $icon = if (Test-Path $IconPath) { $IconPath } else { 'powershell.exe' }
@@ -116,6 +121,7 @@ try {
     Write-Host "  Shortcut created with AUMID: $AUMID" -ForegroundColor Green
     Write-Host "  Path: $shortcutLnk" -ForegroundColor Green
     $shortcutOk = $true
+    $aumidOk = $true
 } catch {
     Write-Host "  C# shortcut failed: $_" -ForegroundColor DarkYellow
     Write-Host "  Trying WScript.Shell fallback (no AUMID)..." -ForegroundColor DarkYellow
@@ -134,6 +140,25 @@ try {
 
 Write-Host ''
 
+if ($ShortcutOnly) {
+    $statusPath = Join-Path $UserDataDir '.setup-status.json'
+    $prevConfigOk = $false
+    if (Test-Path $statusPath) {
+        try { $prevConfigOk = (Get-Content -Raw $statusPath | ConvertFrom-Json).configOk } catch { }
+    } elseif (Test-Path $ConfigPath) {
+        $prevConfigOk = $true
+    }
+    $status = [PSCustomObject]@{
+        configOk    = $prevConfigOk
+        shortcutOk  = [bool]$shortcutOk
+        aumidOk     = [bool]$aumidOk
+        timestamp   = (Get-Date).ToString('o')
+    }
+    $status | ConvertTo-Json | Out-File -FilePath $statusPath -Encoding UTF8
+    Write-Host '=== Shortcut Retry Complete ===' -ForegroundColor Cyan
+    exit 0
+}
+
 # ===================================================================
 # 2. Initialize config
 # ===================================================================
@@ -151,17 +176,18 @@ if (-not (Test-Path $ConfigPath)) {
         showSummary    = $true
         summaryMaxChars = 150
         debugLog       = $false
+        toastClickAction = 'openFolder'
         events         = [PSCustomObject]@{
-            'Stop'                       = [PSCustomObject]@{ enabled = $true; severity = 'low' }
-            'StopFailure'                = [PSCustomObject]@{ enabled = $true; severity = 'high' }
-            'Notification'               = [PSCustomObject]@{ enabled = $true; severity = 'medium' }
-            'PermissionRequest'          = [PSCustomObject]@{ enabled = $true; severity = 'high' }
-            'PreToolUse:AskUserQuestion' = [PSCustomObject]@{ enabled = $true; severity = 'high' }
-            'PreToolUse:ExitPlanMode'    = [PSCustomObject]@{ enabled = $true; severity = 'high' }
-            'SubagentStop'               = [PSCustomObject]@{ enabled = $false; severity = 'low' }
-            'TaskCompleted'              = [PSCustomObject]@{ enabled = $true; severity = 'low' }
-            'SessionStart'               = [PSCustomObject]@{ enabled = $false; severity = 'low' }
-            'SessionEnd'                 = [PSCustomObject]@{ enabled = $false; severity = 'low' }
+            'Stop'                       = [PSCustomObject]@{ enabled = $true; severity = 'low'; respectQuietHours = $true }
+            'StopFailure'                = [PSCustomObject]@{ enabled = $true; severity = 'high'; respectQuietHours = $false }
+            'Notification'               = [PSCustomObject]@{ enabled = $true; severity = 'medium'; respectQuietHours = $true }
+            'PermissionRequest'          = [PSCustomObject]@{ enabled = $true; severity = 'high'; respectQuietHours = $false }
+            'PreToolUse:AskUserQuestion' = [PSCustomObject]@{ enabled = $true; severity = 'high'; respectQuietHours = $false }
+            'PreToolUse:ExitPlanMode'    = [PSCustomObject]@{ enabled = $true; severity = 'high'; respectQuietHours = $false }
+            'SubagentStop'               = [PSCustomObject]@{ enabled = $false; severity = 'low'; respectQuietHours = $true }
+            'TaskCompleted'              = [PSCustomObject]@{ enabled = $false; severity = 'low'; respectQuietHours = $true }
+            'SessionStart'               = [PSCustomObject]@{ enabled = $false; severity = 'low'; respectQuietHours = $true }
+            'SessionEnd'                 = [PSCustomObject]@{ enabled = $false; severity = 'low'; respectQuietHours = $true }
         }
         webhooks       = [PSCustomObject]@{
             enabled   = $false
@@ -198,15 +224,51 @@ if (-not (Test-Path $ConfigPath)) {
                     type   = 'qmsg'
                     url    = 'https://qmsg.zendee.cn/api/v2/send/YOUR_KEY'
                     events = @('StopFailure')
+                },
+                [PSCustomObject]@{
+                    name   = 'dingtalk-example'
+                    type   = 'dingtalk'
+                    url    = 'https://oapi.dingtalk.com/robot/send?access_token=YOUR_TOKEN'
+                    events = @('StopFailure')
+                },
+                [PSCustomObject]@{
+                    name   = 'slack-example'
+                    type   = 'slack'
+                    url    = 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+                    events = @('StopFailure')
+                },
+                [PSCustomObject]@{
+                    name   = 'bark-example'
+                    type   = 'bark'
+                    url    = 'https://api.day.app/YOUR_KEY'
+                    group  = 'claude-code'
+                    events = @('StopFailure')
+                },
+                [PSCustomObject]@{
+                    name   = 'pushplus-example'
+                    type   = 'pushplus'
+                    url    = 'http://www.pushplus.plus/send'
+                    token  = 'YOUR_TOKEN'
+                    events = @('StopFailure')
                 }
             )
         }
     }
-    $defaultConfig | ConvertTo-Json -Depth 4 | Out-File -FilePath $ConfigPath -Encoding UTF8
+    $defaultConfig | ConvertTo-Json -Depth 5 | Out-File -FilePath $ConfigPath -Encoding UTF8
     Write-Host "  Default config created: $ConfigPath" -ForegroundColor Green
 } else {
     Write-Host "  Config already exists: $ConfigPath (left unchanged)" -ForegroundColor Green
 }
+
+$configOk = Test-Path $ConfigPath
+$statusPath = Join-Path $UserDataDir '.setup-status.json'
+$status = [PSCustomObject]@{
+    configOk    = [bool]$configOk
+    shortcutOk  = [bool]$shortcutOk
+    aumidOk     = [bool]$aumidOk
+    timestamp   = (Get-Date).ToString('o')
+}
+$status | ConvertTo-Json | Out-File -FilePath $statusPath -Encoding UTF8
 
 Write-Host ''
 Write-Host '=== Setup Complete ===' -ForegroundColor Cyan
