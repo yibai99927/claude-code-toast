@@ -4,21 +4,21 @@
 
 为 [Claude Code](https://code.claude.com) CLI 提供原生 Windows toast 通知 — 支持 emoji 标题、中文正文、IM webhook 转发、零外部依赖。
 
-> 纯 PowerShell 5.1 · WinRT Toast + 气泡提示回退 · 插件式安装 · 去重 & 免打扰 · Webhooks（企业微信 / Telegram / Discord / 飞书 / QQ）
+> 纯 PowerShell 5.1 · WinRT Toast + 气泡提示回退 · 插件式安装 · 文件级去重 & 免打扰 · 异步 Webhooks（企业微信 / Telegram / Discord / 飞书 / 钉钉 / Slack / QQ / Bark / PushPlus）
 
 ---
 
 ## 功能特性
 
-- **8 种 hook 事件** — Stop、StopFailure、Notification、PermissionRequest、PreToolUse（AskUserQuestion + ExitPlanMode）、SubagentStop、TaskCompleted
-- **原生 Windows toast** — 右下角滑出，使用自定义 Claude Code 图标和专属 AUMID
-- **气泡提示回退** — WinRT toast 不可用时自动使用系统托盘气泡
+- **10 种 hook 事件** — Stop、StopFailure、Notification、PermissionRequest、PreToolUse（AskUserQuestion + ExitPlanMode）、SubagentStop、TaskCompleted、SessionStart、SessionEnd
+- **原生 Windows toast** — 自定义图标、点击打开项目文件夹、专属 AUMID
+- **气泡提示回退** — WinRT 不可用时使用 Claude Code 图标的气泡提示
 - **系统声音** — 按严重程度区分提示音（信息 / 警告 / 错误）
 - **Emoji + 中文** — 标题带 emoji 图标，中文正文，完全兼容 PS 5.1
 - **插件式安装** — 通过 `/plugin install` 一键安装，hooks 自动合并，无需手动编辑 settings.json
-- **去重机制** — 可配置时间窗口内抑制重复通知（默认 5 秒）
-- **免打扰时段** — 可选静音时段，低严重度事件在此期间静音
-- **IM webhook 转发** — 将通知转发到企业微信、Telegram、Discord、飞书、QQ（Qmsg）或任意 HTTP 兼容服务
+- **文件级去重** — 跨 hook 进程持久化去重（`~/.claude/claude-code-toast/.dedup-cache.json`）
+- **免打扰时段** — 全局静音窗口 + 每事件 `respectQuietHours` 控制
+- **异步 IM webhook** — 不阻塞 Claude Code hook 响应
 - **零依赖** — 无需 Node.js、Python、Go、Bun 或外部 PowerShell 模块
 
 ## 系统要求
@@ -56,6 +56,8 @@
                  ──PreToolUse────────►  │                  │
                  ──SubagentStop──────►  │  (所有 hook 事件  │
                  ──TaskCompleted─────►  │   的统一入口)     │
+                 ──SessionStart──────►  │                  │
+                 ──SessionEnd────────►  │                  │
                                         └──────┬───────────┘
                                                │
                                     ┌──────────┴──────────┐
@@ -123,17 +125,18 @@
   "showCwd": true,              // Body 中显示项目目录名
   "showSummary": true,          // 显示最后回复摘要（Stop 事件）
   "summaryMaxChars": 150,       // 摘要截断长度
-  "debugLog": false,            // 记录完整 payload JSON
+  "debugLog": false,            // 脱敏后的 payload 调试日志
   "language": "zh-CN",          // "en" 为英文，"zh-CN" 为中文
+  "toastClickAction": "openFolder", // Toast 点击动作: openFolder | none
   "events": {
-    "Stop":                 {"enabled": true, "severity": "low"},
-    "StopFailure":          {"enabled": true, "severity": "high"},
-    "Notification":         {"enabled": true, "severity": "medium"},
-    "PermissionRequest":    {"enabled": true, "severity": "high"},
-    "PreToolUse:AskUserQuestion": {"enabled": true, "severity": "high"},
-    "PreToolUse:ExitPlanMode":    {"enabled": true, "severity": "high"},
-    "SubagentStop":         {"enabled": false, "severity": "low"},
-    "TaskCompleted":        {"enabled": true, "severity": "low"},
+    "Stop":                 {"enabled": true, "severity": "low", "respectQuietHours": true},
+    "StopFailure":          {"enabled": true, "severity": "high", "respectQuietHours": false},
+    "Notification":         {"enabled": true, "severity": "medium", "respectQuietHours": true},
+    "PermissionRequest":    {"enabled": true, "severity": "high", "respectQuietHours": false},
+    "PreToolUse:AskUserQuestion": {"enabled": true, "severity": "high", "respectQuietHours": false},
+    "PreToolUse:ExitPlanMode":    {"enabled": true, "severity": "high", "respectQuietHours": false},
+    "SubagentStop":         {"enabled": false, "severity": "low", "respectQuietHours": true},
+    "TaskCompleted":        {"enabled": false, "severity": "low", "respectQuietHours": true},
     "SessionStart":         {"enabled": false, "severity": "low"},
     "SessionEnd":           {"enabled": false, "severity": "low"}
   },
@@ -144,7 +147,7 @@
       {"name": "telegram-example","type": "telegram", "url": "https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage",                "chat_id": "YOUR_CHAT_ID",       "events": ["StopFailure"]},
       {"name": "discord-example", "type": "discord",  "url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_TOKEN",                                             "events": ["StopFailure"]},
       {"name": "feishu-example",  "type": "feishu",   "url": "https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_TOKEN",                                                  "events": ["StopFailure"]},
-      {"name": "qq-qmsg-example", "type": "http",     "url": "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",                                                              "events": ["StopFailure"]}
+      {"name": "qq-qmsg-example", "type": "qmsg",     "url": "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",                                                              "events": ["StopFailure"]}
     ]
   }
 }
@@ -162,7 +165,14 @@
 | `telegram` | Telegram | `chat_id` |
 | `discord` | Discord | — |
 | `feishu` | 飞书 | — |
-| `http` | QQ Qmsg / 通用 HTTP | — |
+| `qmsg` | QQ Qmsg | — |
+| `dingtalk` | 钉钉 | — |
+| `slack` | Slack | — |
+| `bark` | Bark (iOS) | `group` |
+| `pushplus` | PushPlus | `token` |
+| `http` | 通用 JSON webhook | 发送 `{"content": "..."}` |
+
+配置 JSON Schema 见 [`notify-config.schema.json`](notify-config.schema.json)。
 
 **示例：** 在企业微信上接收 `StopFailure` 和 `PermissionRequest` 告警：
 
@@ -204,19 +214,37 @@ powershell -NoProfile -ExecutionPolicy Bypass -File setup-uninstall.ps1
 ```
 claude-code-toast/
   .claude-plugin/
-    plugin.json             ← 插件元数据
+    plugin.json             ← 插件元数据（版本号单一来源）
     marketplace.json        ← 市场定义
+  lib/
+    config.ps1              ← 配置加载与深度合并
+    dedup.ps1               ← 文件级去重
+    messages.ps1            ← 消息模板
+    toast.ps1               ← WinRT / 气泡 / 声音
+    webhooks.ps1            ← IM webhook（含异步投递）
+    ...
   hooks/
     hooks.json              ← hook 声明（Claude Code 运行时自动合并）
-  notify-handler.ps1        ← 主处理器（所有 hooks 调用）
-  setup.ps1                 ← 一次性 AUMID 快捷方式 + 配置初始化
+  notify-handler.ps1        ← 入口脚本（所有 hooks 调用）
+  webhook-worker.ps1        ← 异步 webhook 后台 worker
+  setup.ps1                 ← AUMID 快捷方式 + 配置初始化
   setup-uninstall.ps1       ← 快捷方式 + 用户数据清理
   notify-config.json        ← 默认配置模板
+  notify-config.schema.json ← 配置 JSON Schema
+  tests/run-tests.ps1       ← 单元测试（Windows PowerShell）
+  CHANGELOG.md              ← 版本变更记录
   ClaudeCode-logo.ico       ← toast 通知图标
-  ClaudeCode-logo.jpg       ← 原始 logo 素材
   README.md                 ← 英文说明
   README.zh-CN.md           ← 中文说明（本文件）
   logs/                     ← 运行日志（gitignore，存储于 ~/.claude/claude-code-toast/）
+```
+
+## 测试
+
+在 Windows PowerShell 中运行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/run-tests.ps1
 ```
 
 ## 故障排查

@@ -13,47 +13,58 @@
     "summaryMaxChars":  150,
     "debugLog":  false,
     "language":  "zh-CN",
+    "toastClickAction":  "openFolder",
     "_language_comment":  "Set to \u0027en\u0027 for English notifications, \u0027zh-CN\u0027 for Chinese",
     "events":  {
                    "Stop":  {
                                 "enabled":  true,
-                                "severity":  "low"
+                                "severity":  "low",
+                                "respectQuietHours":  true
                             },
                    "StopFailure":  {
                                        "enabled":  true,
-                                       "severity":  "high"
+                                       "severity":  "high",
+                                       "respectQuietHours":  false
                                    },
                    "Notification":  {
                                         "enabled":  true,
-                                        "severity":  "medium"
+                                        "severity":  "medium",
+                                        "respectQuietHours":  true
                                     },
                    "PermissionRequest":  {
                                              "enabled":  true,
-                                             "severity":  "high"
+                                             "severity":  "high",
+                                             "respectQuietHours":  false
                                          },
                    "PreToolUse:AskUserQuestion":  {
                                                       "enabled":  true,
-                                                      "severity":  "high"
+                                                      "severity":  "high",
+                                                      "respectQuietHours":  false
                                                   },
                    "PreToolUse:ExitPlanMode":  {
                                                    "enabled":  true,
-                                                   "severity":  "high"
+                                                   "severity":  "high",
+                                                   "respectQuietHours":  false
                                                },
                    "SubagentStop":  {
                                         "enabled":  false,
-                                        "severity":  "low"
+                                        "severity":  "low",
+                                        "respectQuietHours":  true
                                     },
                    "TaskCompleted":  {
-                                         "enabled":  true,
-                                         "severity":  "low"
+                                         "enabled":  false,
+                                         "severity":  "low",
+                                         "respectQuietHours":  true
                                      },
                    "SessionStart":  {
                                         "enabled":  false,
-                                        "severity":  "low"
+                                        "severity":  "low",
+                                        "respectQuietHours":  true
                                     },
                    "SessionEnd":  {
                                       "enabled":  false,
-                                      "severity":  "low"
+                                      "severity":  "low",
+                                      "respectQuietHours":  true
                                   }
                },
     "webhooks":  {
@@ -97,8 +108,42 @@
                                        },
                                        {
                                            "name":  "qq-qmsg-example",
-                                           "type":  "http",
+                                           "type":  "qmsg",
                                            "url":  "https://qmsg.zendee.cn/api/v2/send/YOUR_KEY",
+                                           "events":  [
+                                                          "StopFailure"
+                                                      ]
+                                       },
+                                       {
+                                           "name":  "dingtalk-example",
+                                           "type":  "dingtalk",
+                                           "url":  "https://oapi.dingtalk.com/robot/send?access_token=YOUR_TOKEN",
+                                           "events":  [
+                                                          "StopFailure"
+                                                      ]
+                                       },
+                                       {
+                                           "name":  "slack-example",
+                                           "type":  "slack",
+                                           "url":  "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+                                           "events":  [
+                                                          "StopFailure"
+                                                      ]
+                                       },
+                                       {
+                                           "name":  "bark-example",
+                                           "type":  "bark",
+                                           "url":  "https://api.day.app/YOUR_KEY",
+                                           "group":  "claude-code",
+                                           "events":  [
+                                                          "StopFailure"
+                                                      ]
+                                       },
+                                       {
+                                           "name":  "pushplus-example",
+                                           "type":  "pushplus",
+                                           "url":  "http://www.pushplus.plus/send",
+                                           "token":  "YOUR_TOKEN",
                                            "events":  [
                                                           "StopFailure"
                                                       ]
