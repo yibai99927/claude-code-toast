@@ -588,6 +588,12 @@ if ($null -eq $Payload) {
     exit 0
 }
 
+# Cursor imports Claude Code plugins and adds this field to its hook payload.
+# Let Cursor keep its native notifications instead of emitting a duplicate toast.
+if ($Payload.PSObject.Properties.Name -contains 'cursor_version') {
+    exit 0
+}
+
 $EventName = $Payload.hook_event_name
 $ToolName  = $Payload.tool_name
 $SessionId = if ($Payload.session_id) { $Payload.session_id } else { 'unknown' }
